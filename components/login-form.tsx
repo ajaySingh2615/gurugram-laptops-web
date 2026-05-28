@@ -18,6 +18,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { AuthService } from "@/services/auth.service";
+import { useAuthStore } from "@/store/auth.store";
 
 // Define our validation schema
 const loginSchema = z.object({
@@ -30,6 +31,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
 
   const {
     register,
@@ -50,6 +52,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
       });
 
       // NO MORE LOCAL STORAGE! The backend automatically sets the secure cookie.
+
+      // CRITICAL: We must tell Zustand to fetch the newly logged-in user so the Navbar updates instantly!
+      await initializeAuth();
 
       toast.success(response.message || "Welcome back!");
       router.push("/");
