@@ -5,6 +5,15 @@ import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { User, LogOut } from 'lucide-react';
+
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu"
 
 export function Navbar() {
   const { user, isInitialized, logout } = useAuthStore();
@@ -17,49 +26,75 @@ export function Navbar() {
   };
 
   return (
-    <nav className="border-b bg-background">
+    <nav className="border-b bg-background sticky top-0 z-50">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* Logo area */}
-        <Link href="/" className="text-xl font-bold tracking-tight">
-          TechReborn
-        </Link>
-
-        {/* Navigation Links */}
-        <div className="flex gap-4 items-center">
-          <Link href="/">
-            <Button variant="ghost">Home</Button>
-          </Link>
-          <Link href="/shop">
-            <Button variant="ghost">Shop</Button>
-          </Link>
-          <Link href="/about">
-            <Button variant="ghost">About</Button>
-          </Link>
-          <Link href="/contact">
-            <Button variant="ghost">Contact</Button>
+        
+        {/* Left Side: Logo & Main Navigation */}
+        <div className="flex items-center gap-6">
+          <Link href="/" className="text-xl font-bold tracking-tight">
+            TechReborn
           </Link>
 
-          {/* Auth State */}
-          <div className="ml-4 pl-4 border-l flex gap-2">
-            {!isInitialized ? (
-              <Button variant="ghost" disabled>Loading...</Button>
-            ) : user ? (
-              <>
-                <Button variant="ghost" disabled>My Account</Button>
-                <Button variant="destructive" onClick={handleLogout}>Logout</Button>
-              </>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button variant="outline">Sign In</Button>
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <Link href="/" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Home
+                  </NavigationMenuLink>
                 </Link>
-                <Link href="/signup">
-                  <Button>Sign Up</Button>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/shop" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Shop
+                  </NavigationMenuLink>
                 </Link>
-              </>
-            )}
-          </div>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/about" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    About
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/contact" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Contact
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
         </div>
+
+        {/* Right Side: Auth State */}
+        <div className="flex items-center gap-6">
+          {!isInitialized ? (
+            <div className="h-9 w-24 animate-pulse bg-muted rounded-full"></div>
+          ) : user ? (
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" className="gap-2 rounded-full font-medium">
+                <User className="h-4 w-4" />
+                My Account
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout" className="hover:bg-red-50 hover:text-red-600 rounded-full">
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                Sign In
+              </Link>
+              <Link href="/signup">
+                <Button className="rounded-full px-6 shadow-sm">Get Started</Button>
+              </Link>
+            </div>
+          )}
+        </div>
+
       </div>
     </nav>
   );
