@@ -6,18 +6,9 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // CRITICAL: This tells the browser to automatically attach our HTTP-Only cookies to every request!
+  withCredentials: true,
 });
 
-// Interceptor to automatically attach the access token to every request
-apiClient.interceptors.request.use((config) => {
-  // In a browser environment, read from localStorage
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
-  return config;
-});
-
-// NOTE: We will add the Refresh Token response interceptor later!
+// Since we use HTTP-Only cookies, we NO LONGER NEED the LocalStorage interceptor.
+// The browser handles token passing securely and automatically!

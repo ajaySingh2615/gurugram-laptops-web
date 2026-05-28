@@ -49,9 +49,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
         password: data.password,
       });
 
-      // Save tokens to LocalStorage
-      localStorage.setItem("accessToken", response.data.tokens.accessToken);
-      localStorage.setItem("refreshToken", response.data.tokens.refreshToken);
+      // NO MORE LOCAL STORAGE! The backend automatically sets the secure cookie.
 
       toast.success(response.message || "Welcome back!");
       router.push("/");
