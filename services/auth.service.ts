@@ -48,4 +48,16 @@ export class AuthService {
   public static async refreshToken(): Promise<void> {
     await apiClient.post('/auth/refresh-token');
   }
+
+  public static async verifyEmail(token: string): Promise<void> {
+    await apiClient.post('/auth/verify-email', { token });
+  }
+
+  public static async forgotPassword(email: string): Promise<void> {
+    await apiClient.post('/auth/forgot-password', { email });
+  }
+
+  public static async resetPassword(token: string, newPassword: string): Promise<void> {
+    await apiClient.post('/auth/reset-password', { token, newPassword });
+  }
 }
