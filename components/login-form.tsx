@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { isAxiosError } from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -102,12 +103,12 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a
-                    href="#"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
+                  <Link
+                    href="/forgot-password"
+                    className="ml-auto text-sm underline-offset-2 hover:underline hover:text-primary"
                   >
                     Forgot your password?
-                  </a>
+                  </Link>
                 </div>
                 <Input id="password" type="password" {...register("password")} />
                 {errors.password && <FieldDescription className="text-red-500">{errors.password.message}</FieldDescription>}
