@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Plus, Search, MoreHorizontal, Edit, Trash2 } from "lucide-react";
@@ -25,15 +25,44 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
-import { MOCK_PRODUCTS } from "@/lib/mock-data";
+import { ProductService } from "@/services/product.service";
+
+interface ProductData {
+  id: string;
+  title: string;
+  brand: string;
+  category: string;
+  subcategory: string;
+  image: string;
+  basePrice: number;
+  inStock: boolean;
+  enableVariants: boolean;
+  variants?: Record<string, unknown>[];
+}
 
 export default function AdminProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [products, setProducts] = useState<ProductData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredProducts = MOCK_PRODUCTS.filter(p => 
-    p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.brand.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await ProductService.getAllProducts();
+        setProducts((response.data as ProductData[]) || []);
+      } catch (error) {
+        console.error("Failed to fetch products", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  const filteredProducts = products.filter(p => 
+    p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.brand?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const formatInr = (amount: number) => {
@@ -70,7 +99,7 @@ export default function AdminProductsPage() {
           </div>
         </div>
         <Badge variant="outline" className="ml-auto">
-          Total Products: {MOCK_PRODUCTS.length}
+          Total Products: {products.length}
         </Badge>
       </div>
 
@@ -87,7 +116,13 @@ export default function AdminProductsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredProducts.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  Loading products from database...
+                </TableCell>
+              </TableRow>
+            ) : filteredProducts.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
                   No products found.
@@ -117,7 +152,7 @@ export default function AdminProductsPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {product.variants.length > 0 ? (
+                    {product.enableVariants && product.variants && product.variants.length > 0 ? (
                       <div className="flex flex-col gap-1">
                         <span className="font-medium text-xs text-muted-foreground">From {formatInr(product.basePrice)}</span>
                         <Badge variant="outline" className="w-fit text-[10px] h-5 bg-blue-50 text-blue-700 border-blue-200">

@@ -7,6 +7,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { ArrowLeft, Plus, Trash2, Save, Image as ImageIcon } from "lucide-react";
+import { ProductService } from "@/services/product.service";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -125,12 +126,11 @@ export default function AddProductPage() {
   const onSubmit = async (data: ProductFormValues) => {
     setIsSubmitting(true);
     try {
-      // Simulate API Call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log("Mock API Payload:", data);
+      await ProductService.createProduct(data);
       toast.success("Product created successfully!");
       router.push("/admin/products");
     } catch (error) {
+      console.error(error);
       toast.error("Failed to create product");
     } finally {
       setIsSubmitting(false);
