@@ -26,8 +26,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   initializeAuth: async () => {
     try {
       set({ isLoading: true });
-      const user = await AuthService.getMe();
-      set({ user, isInitialized: true, isLoading: false });
+      const userData = await AuthService.getMe();
+      
+      // If the user was banned by an admin, kick them out immediately!
+      if (userData.status === 'BANNED') {
+        await AuthService.logout();
+        set({ user: null, isInitialized: true, isLoading: false });
+        return;
+      }
+
+      set({ user: userData, isInitialized: true, isLoading: false });
     } catch (error) {
       // If getMe fails (401), the user is not logged in.
       set({ user: null, isInitialized: true, isLoading: false });
