@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -22,7 +22,25 @@ import {
   CheckCircle2,
   ChevronRight,
 } from "lucide-react";
-import { MOCK_PRODUCTS, Product, ProductVariant } from "@/lib/mock-data";
+import { ProductService } from "@/services/product.service";
+
+export interface ShopProduct {
+  id: string;
+  title: string;
+  brand: string;
+  category: string;
+  subcategory: string;
+  image: string;
+  basePrice: number;
+  originalBasePrice: number;
+  inStock: boolean;
+  isRefurbished: boolean;
+  rating?: number;
+  tags?: string[];
+  enableVariants: boolean;
+  attributes: Record<string, string>;
+  variants?: Record<string, unknown>[];
+}
 
 // Extracted unique filter options based on the active category
 const CATEGORIES = ["All", "Laptops", "Peripherals", "Converters"];
@@ -39,6 +57,35 @@ export default function ShopPage() {
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [priceRange, setPriceRange] = useState<number[]>([100, 200000]);
   const [inStockOnly, setInStockOnly] = useState(false);
+  
+  const [products, setProducts] = useState<ShopProduct[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await ProductService.getAllProducts();
+        
+        // Map DB attributes [{key: "RAM", value: "16GB"}] to { ram: "16GB" }
+        const mappedProducts = (response.data as (ShopProduct & { attributes: { key: string; value: string }[] })[]).map(p => {
+          const attrObj: Record<string, string> = {};
+          if (Array.isArray(p.attributes)) {
+            p.attributes.forEach((attr) => {
+              if (attr.key) attrObj[attr.key.toLowerCase()] = attr.value;
+            });
+          }
+          return { ...p, attributes: attrObj } as ShopProduct;
+        });
+        
+        setProducts(mappedProducts);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   // Dynamic JSONB attributes filters
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -54,7 +101,7 @@ export default function ShopPage() {
   };
 
   const filteredProducts = useMemo(() => {
-    return MOCK_PRODUCTS.filter((product) => {
+    return products.filter((product) => {
       // Base filters
       if (activeCategory !== "All" && product.category !== activeCategory)
         return false;
@@ -91,19 +138,20 @@ export default function ShopPage() {
     selectedBrands,
     selectedSubcats,
     selectedRam,
+    products,
   ]);
 
   // Dynamically calculate what filter options to show based on the current active Category!
   const availableBrands = Array.from(
     new Set(
-      MOCK_PRODUCTS.filter(
+      products.filter(
         (p) => activeCategory === "All" || p.category === activeCategory,
       ).map((p) => p.brand),
     ),
   );
   const availableSubcats = Array.from(
     new Set(
-      MOCK_PRODUCTS.filter(
+      products.filter(
         (p) => activeCategory === "All" || p.category === activeCategory,
       ).map((p) => p.subcategory),
     ),
@@ -112,7 +160,7 @@ export default function ShopPage() {
   // Only calculate RAM options if we are looking at Laptops (or All)
   const availableRam = Array.from(
     new Set(
-      MOCK_PRODUCTS.filter(
+      products.filter(
         (p) =>
           (activeCategory === "All" || p.category === "Laptops") &&
           p.attributes.ram,
@@ -297,7 +345,11 @@ export default function ShopPage() {
             </Badge>
           </div>
 
-          {filteredProducts.length === 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center border rounded-lg bg-muted/20">
+              <h3 className="text-xl font-semibold mb-2">Loading products...</h3>
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center border rounded-lg bg-muted/20">
               <h3 className="text-xl font-semibold mb-2">No products found</h3>
               <p className="text-muted-foreground">
@@ -311,7 +363,7 @@ export default function ShopPage() {
                 const discountPercent = Math.round(
                   (savings / product.originalBasePrice) * 100,
                 );
-                const hasVariants = product.variants.length > 0;
+                const hasVariants = (product.variants?.length ?? 0) > 0;
 
                 return (
                   <Card
@@ -338,7 +390,7 @@ export default function ShopPage() {
                       )}
 
                       {/* Top Right: Rating */}
-                      {product.rating > 0 && (
+                      {(product.rating || 0) > 0 && (
                         <Badge className="absolute top-3 right-3 shadow-sm bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100">
                           <Star className="w-3 h-3 mr-1 fill-amber-500 text-amber-500" />
                           {product.rating}
@@ -383,7 +435,7 @@ export default function ShopPage() {
                       </CardDescription>
 
                       {/* Tags */}
-                      {product.tags.length > 0 && (
+                      {product.tags && product.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-3">
                           {product.tags.slice(0, 3).map((tag) => (
                             <Badge

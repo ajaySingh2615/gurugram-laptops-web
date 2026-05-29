@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, notFound } from "next/navigation";
@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MOCK_PRODUCTS, ProductVariant } from "@/lib/mock-data";
+import { ProductService } from "@/services/product.service";
+import type { ShopProduct } from "../page";
 
 const formatInr = (amount: number) => {
   return new Intl.NumberFormat('en-IN', {
@@ -23,12 +24,45 @@ export default function ProductDetailsPage() {
   const params = useParams();
   const productId = params.id as string;
   
-  const product = MOCK_PRODUCTS.find(p => p.id === productId);
+  const [product, setProduct] = useState<ShopProduct | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedVariant, setSelectedVariant] = useState<Record<string, unknown> | null>(null);
 
-  // Initialize selected variant if they exist
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
-    product?.variants && product.variants.length > 0 ? product.variants[0] : null
-  );
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await ProductService.getProductById(productId);
+        
+        // Map DB attributes [{key: "RAM", value: "16GB"}] to { ram: "16GB" }
+        const raw = response.data as ShopProduct & { attributes: { key: string; value: string }[] };
+        const attrObj: Record<string, string> = {};
+        if (Array.isArray(raw.attributes)) {
+          raw.attributes.forEach((attr) => {
+            if (attr.key) attrObj[attr.key.toLowerCase()] = attr.value;
+          });
+        }
+
+        const p: ShopProduct = { ...raw, attributes: attrObj };
+        setProduct(p);
+        if (Array.isArray(p.variants) && p.variants.length > 0) {
+          setSelectedVariant(p.variants[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch product:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [productId]);
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-24 text-center">
+        <h1 className="text-2xl font-semibold mb-4">Loading Product...</h1>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -42,8 +76,8 @@ export default function ProductDetailsPage() {
     );
   }
 
-  const activePrice = selectedVariant ? selectedVariant.price : product.basePrice;
-  const activeOriginalPrice = selectedVariant ? selectedVariant.originalPrice : product.originalBasePrice;
+  const activePrice = selectedVariant ? (selectedVariant.price as number) : product.basePrice;
+  const activeOriginalPrice = selectedVariant ? (selectedVariant.originalPrice as number) : product.originalBasePrice;
   const savings = activeOriginalPrice - activePrice;
   const discountPercent = Math.round((savings / activeOriginalPrice) * 100);
 
@@ -103,11 +137,11 @@ export default function ProductDetailsPage() {
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-1 mb-3">{product.title}</h1>
             
             <div className="flex items-center gap-4">
-              {product.rating > 0 && (
+              {(product.rating || 0) > 0 && (
                 <div className="flex items-center gap-1.5">
                   <div className="flex">
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? "fill-amber-500 text-amber-500" : "fill-muted text-muted"}`} />
+                      <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating || 0) ? "fill-amber-500 text-amber-500" : "fill-muted text-muted"}`} />
                     ))}
                   </div>
                   <span className="text-sm font-medium">{product.rating} Rating</span>
@@ -139,16 +173,16 @@ export default function ProductDetailsPage() {
           </div>
 
           {/* Variant Selector */}
-          {product.variants.length > 0 && (
+          {(product.variants?.length ?? 0) > 0 && (
             <div className="mb-8 space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold">Select Option</h3>
-                <span className="text-sm font-medium text-primary">{selectedVariant?.name}</span>
+                <span className="text-sm font-medium text-primary">{selectedVariant?.name as string}</span>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                {product.variants.map((variant) => (
+                {product.variants?.map((variant) => (
                   <button
-                    key={variant.id}
+                    key={variant.id as string}
                     onClick={() => setSelectedVariant(variant)}
                     className={`relative p-4 rounded-xl border-2 text-left transition-all ${
                       selectedVariant?.id === variant.id 
@@ -156,8 +190,8 @@ export default function ProductDetailsPage() {
                         : 'border-muted hover:border-primary/30 hover:bg-muted/30'
                     }`}
                   >
-                    <div className="font-medium mb-1">{variant.name}</div>
-                    <div className="text-sm text-muted-foreground">{formatInr(variant.price)}</div>
+                    <div className="font-medium mb-1">{variant.name as string}</div>
+                    <div className="text-sm text-muted-foreground">{formatInr(variant.price as number)}</div>
                     {selectedVariant?.id === variant.id && (
                       <CheckCircle2 className="absolute top-4 right-4 w-5 h-5 text-primary" />
                     )}
