@@ -2,13 +2,19 @@ import { create } from 'zustand';
 import { AuthService } from '@/services/auth.service';
 
 interface AuthState {
-  user: { userId: string } | null;
+  user: { 
+    userId: string;
+    fullName: string;
+    email: string;
+    role: 'USER' | 'ADMIN';
+    status: 'ACTIVE' | 'BANNED';
+  } | null;
   isLoading: boolean;
   isInitialized: boolean;
   
   // Actions
   initializeAuth: () => Promise<void>;
-  setUser: (user: { userId: string } | null) => void;
+  setUser: (user: { userId: string; fullName: string; email: string; role: 'USER' | 'ADMIN'; status: 'ACTIVE' | 'BANNED' } | null) => void;
   logout: () => Promise<void>;
 }
 

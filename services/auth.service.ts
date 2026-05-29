@@ -35,10 +35,9 @@ export class AuthService {
     return response.data;
   }
 
-  public static async getMe(): Promise<{ userId: string }> {
+  public static async getMe(): Promise<{ userId: string; fullName: string; email: string; role: 'USER' | 'ADMIN'; status: 'ACTIVE' | 'BANNED' }> {
     const response = await apiClient.get('/auth/me');
-    // Note: Our current backend only returns { success, message, userId } for the /me route.
-    return { userId: response.data.userId };
+    return response.data;
   }
 
   public static async logout(): Promise<void> {

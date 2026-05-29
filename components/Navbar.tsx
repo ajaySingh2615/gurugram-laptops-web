@@ -75,6 +75,13 @@ export function Navbar() {
             <div className="h-9 w-24 animate-pulse bg-muted rounded-full"></div>
           ) : user ? (
             <div className="flex items-center gap-4">
+              {user.role === 'ADMIN' && (
+                <Link href="/admin">
+                  <Button variant="outline" className="gap-2 rounded-full border-primary/20 hover:bg-primary/5 text-primary text-xs font-semibold uppercase tracking-wider">
+                    Admin Portal
+                  </Button>
+                </Link>
+              )}
               <Button variant="ghost" className="gap-2 rounded-full font-medium">
                 <User className="h-4 w-4" />
                 My Account
