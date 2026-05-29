@@ -81,6 +81,13 @@ export default function ProductDetailsPage() {
   const savings = activeOriginalPrice - activePrice;
   const discountPercent = Math.round((savings / activeOriginalPrice) * 100);
 
+  // Merge variant-specific RAM & Storage into the base attributes for live spec display
+  const activeAttributes: Record<string, string> = {
+    ...product.attributes,
+    ...(selectedVariant?.ram ? { ram: selectedVariant.ram as string } : {}),
+    ...(selectedVariant?.storage ? { storage: selectedVariant.storage as string } : {}),
+  };
+
   return (
     <div className="container mx-auto py-8">
       
@@ -205,7 +212,7 @@ export default function ProductDetailsPage() {
           <div className="mb-8 space-y-3">
             <h3 className="font-semibold">Key Specifications</h3>
             <div className="grid grid-cols-2 gap-y-3 gap-x-6">
-              {Object.entries(product.attributes).slice(0, 4).map(([key, value]) => (
+              {Object.entries(activeAttributes).slice(0, 4).map(([key, value]) => (
                 <div key={key} className="flex flex-col">
                   <span className="text-xs text-muted-foreground capitalize">{key}</span>
                   <span className="text-sm font-medium">{value}</span>
@@ -266,7 +273,7 @@ export default function ProductDetailsPage() {
             <div className="rounded-xl border overflow-hidden">
               <table className="w-full text-sm">
                 <tbody>
-                  {Object.entries(product.attributes).map(([key, value], index) => (
+                  {Object.entries(activeAttributes).map(([key, value], index) => (
                     <tr key={key} className={`${index % 2 === 0 ? 'bg-muted/30' : 'bg-background'} border-b last:border-0`}>
                       <td className="py-4 px-6 font-medium text-muted-foreground w-1/3 capitalize">{key}</td>
                       <td className="py-4 px-6 font-semibold">{value}</td>
