@@ -16,7 +16,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { LayoutDashboardIcon, ListIcon, ChartBarIcon, FolderIcon, UsersIcon, CameraIcon, FileTextIcon, Settings2Icon, CircleHelpIcon, SearchIcon, DatabaseIcon, FileChartColumnIcon, FileIcon, CommandIcon } from "lucide-react"
+import { LayoutDashboardIcon, ListIcon, ChartBarIcon, FolderIcon, UsersIcon, CameraIcon, FileTextIcon, Settings2Icon, CircleHelpIcon, SearchIcon, DatabaseIcon, FileChartColumnIcon, FileIcon, CommandIcon, PackageIcon } from "lucide-react"
 
 const data = {
   navMain: [
@@ -32,6 +32,13 @@ const data = {
       url: "/admin/users",
       icon: (
         <UsersIcon />
+      ),
+    },
+    {
+      title: "Products",
+      url: "/admin/products",
+      icon: (
+        <PackageIcon />
       ),
     },
   ],
