@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/components/AuthProvider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,11 +33,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <AuthProvider>
-          <Navbar />
-          <main className="container mx-auto p-8 flex-1">
-            {children}
-          </main>
-          <Toaster />
+          <TooltipProvider>
+            <Navbar />
+            <main className="container mx-auto p-8 flex-1">
+              {children}
+            </main>
+            <Toaster />
+          </TooltipProvider>
         </AuthProvider>
       </body>
     </html>
