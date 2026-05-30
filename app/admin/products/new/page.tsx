@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowLeft, Plus, Trash2, Save, Upload, CheckCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, Upload, CheckCircle, Loader2, Star } from "lucide-react";
 import { ProductService } from "@/services/product.service";
 import { UploadService } from "@/services/upload.service";
 import Image from "next/image";
@@ -41,12 +41,12 @@ const productSchema = z.object({
   subcategory: z.string().min(1, "Subcategory is required"),
   isRefurbished: z.boolean().default(false),
   images: z.array(z.string()).min(1, "At least one image is required"),
-  basePrice: z.coerce.number().min(0),
-  originalBasePrice: z.coerce.number().min(0),
+  basePrice: z.coerce.number().default(0),
+  originalBasePrice: z.coerce.number().default(0),
   inStock: z.boolean().default(true),
   attributes: z.array(z.object({
     key: z.string().min(1, "Key is required"),
-    value: z.string().min(1, "Value is required")
+    value: z.string().optional()
   })),
   enableVariants: z.boolean().default(false),
   variants: z.array(z.object({
@@ -56,7 +56,7 @@ const productSchema = z.object({
     price: z.coerce.number().min(0),
     originalPrice: z.coerce.number().min(0),
     inStock: z.boolean().default(true)
-  }))
+  })).min(1, "At least one pricing option is required.")
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -80,8 +80,8 @@ export default function AddProductPage() {
       originalBasePrice: 0,
       inStock: true,
       attributes: [],
-      enableVariants: false,
-      variants: []
+      enableVariants: true,
+      variants: [{ name: "Standard", price: 0, originalPrice: 0, inStock: true }]
     },
   });
 
@@ -95,9 +95,8 @@ export default function AddProductPage() {
     name: "variants",
   });
 
-  const watchEnableVariants = form.watch("enableVariants");
   const watchCategory = form.watch("category");
-  const REQUIRED_LAPTOP_KEYS = ["Processor", "RAM", "Storage", "Screen Size", "Operating System"];
+  const REQUIRED_LAPTOP_KEYS = ["Processor", "Screen Size", "Operating System"];
   
   const LAPTOP_ATTRIBUTE_OPTIONS: Record<string, string[]> = {
     "Processor": ["Intel Core i3", "Intel Core i5", "Intel Core i7", "Intel Core i9", "Intel Core Ultra 5", "Intel Core Ultra 7", "Intel Core Ultra 9", "AMD Ryzen 3", "AMD Ryzen 5", "AMD Ryzen 7", "AMD Ryzen 9", "Apple M1", "Apple M2", "Apple M3", "Apple M3 Pro", "Apple M3 Max", "Snapdragon X Elite"],
@@ -114,8 +113,6 @@ export default function AddProductPage() {
     if (value === "Laptops") {
       form.setValue("attributes", [
         { key: "Processor", value: "" },
-        { key: "RAM", value: "" },
-        { key: "Storage", value: "" },
         { key: "Screen Size", value: "" },
         { key: "Operating System", value: "" },
       ]);
@@ -133,7 +130,19 @@ export default function AddProductPage() {
     }
     setIsSubmitting(true);
     try {
-      await ProductService.createProduct(data);
+      const basePrice = Math.min(...data.variants.map(v => v.price));
+      const originalBasePrice = Math.max(...data.variants.map(v => v.originalPrice));
+      const inStock = data.variants.some(v => v.inStock);
+
+      const cleanedData = {
+        ...data,
+        basePrice,
+        originalBasePrice,
+        inStock,
+        enableVariants: true,
+        attributes: data.attributes.filter(attr => attr.value && attr.value.trim() !== "") as {key: string; value: string;}[]
+      };
+      await ProductService.createProduct(cleanedData);
       toast.success("Product created successfully!");
       router.push("/admin/products");
     } catch (error) {
@@ -386,6 +395,25 @@ export default function AddProductPage() {
                         {idx === 0 && (
                           <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-md font-medium shadow-sm">Primary</div>
                         )}
+                        {idx !== 0 && (
+                          <Button 
+                            type="button" 
+                            variant="secondary" 
+                            size="icon" 
+                            className="absolute top-2 left-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 hover:bg-primary hover:text-primary-foreground"
+                            onClick={() => {
+                              const current = form.getValues("images");
+                              const newImages = [...current];
+                              const temp = newImages[0];
+                              newImages[0] = newImages[idx];
+                              newImages[idx] = temp;
+                              form.setValue("images", newImages);
+                            }}
+                            title="Set as primary"
+                          >
+                            <Star className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button 
                           type="button" 
                           variant="destructive" 
@@ -395,6 +423,7 @@ export default function AddProductPage() {
                             const current = form.getValues("images");
                             form.setValue("images", current.filter((_, i) => i !== idx));
                           }}
+                          title="Delete image"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -432,83 +461,16 @@ export default function AddProductPage() {
                 </CardContent>
               </Card>
 
-              {/* Pricing & Variants Card */}
+              {/* Pricing & Options Card */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Pricing & Inventory</CardTitle>
-                  <CardDescription>Manage base price or create product variations.</CardDescription>
+                  <CardTitle>Pricing & Options</CardTitle>
+                  <CardDescription>Add at least one product option to set the price and inventory.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   
-                  {/* Base Pricing (Hidden if variants are enabled) */}
-                  {!watchEnableVariants && (
-                    <div className="space-y-4 animate-in fade-in-50">
-                      <FormField
-                        control={form.control}
-                        name="basePrice"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Base Price (₹)</FormLabel>
-                            <FormControl>
-                              <Input type="number" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="originalBasePrice"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Original MRP (₹)</FormLabel>
-                            <FormControl>
-                              <Input type="number" {...field} />
-                            </FormControl>
-                            <FormDescription>Used to calculate discount percentage.</FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="inStock"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-base">In Stock</FormLabel>
-                            </div>
-                            <FormControl>
-                              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-
-                  <Separator />
-
-                  {/* Variants Toggle */}
-                  <FormField
-                    control={form.control}
-                    name="enableVariants"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg bg-muted/50 p-4 border border-primary/20">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base text-primary">Enable Variants</FormLabel>
-                          <FormDescription>Sell different versions of this product.</FormDescription>
-                        </div>
-                        <FormControl>
-                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
                   {/* Variant Builder */}
-                  {watchEnableVariants && (
-                    <div className="space-y-4 animate-in fade-in slide-in-from-top-4">
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-4">
                       <div className="flex items-center justify-between">
                         <h4 className="font-semibold text-sm">Product Variants</h4>
                         <Button 
@@ -642,8 +604,6 @@ export default function AddProductPage() {
                         </div>
                       )}
                     </div>
-                  )}
-
                 </CardContent>
                 <CardFooter className="bg-muted/30 pt-6">
                   <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
