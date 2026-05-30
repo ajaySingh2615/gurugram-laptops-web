@@ -30,7 +30,7 @@ export interface ShopProduct {
   brand: string;
   category: string;
   subcategory: string;
-  image: string;
+  images: string[];
   basePrice: number;
   originalBasePrice: number;
   inStock: boolean;
@@ -372,9 +372,10 @@ export default function ShopPage() {
                   >
                     <Link href={`/shop/${product.id}`} className="block aspect-[4/3] relative bg-gradient-to-b from-muted/50 to-muted p-6 cursor-pointer">
                       <Image
-                        src={product.image}
+                        src={product.images?.[0] || '/images/placeholder.png'}
                         alt={product.title}
                         fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         className="object-contain p-4 mix-blend-multiply dark:mix-blend-normal group-hover:scale-105 transition-transform duration-500"
                       />
 

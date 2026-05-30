@@ -33,7 +33,7 @@ interface ProductData {
   brand: string;
   category: string;
   subcategory: string;
-  image: string;
+  images: string[];
   basePrice: number;
   inStock: boolean;
   enableVariants: boolean;
@@ -134,9 +134,10 @@ export default function AdminProductsPage() {
                   <TableCell>
                     <div className="relative h-10 w-10 overflow-hidden rounded-md border bg-muted">
                       <Image
-                        src={product.image}
+                        src={product.images?.[0] || '/images/placeholder.png'}
                         alt={product.title}
                         fill
+                        sizes="40px"
                         className="object-contain p-1"
                       />
                     </div>

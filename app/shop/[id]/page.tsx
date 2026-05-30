@@ -27,6 +27,7 @@ export default function ProductDetailsPage() {
   const [product, setProduct] = useState<ShopProduct | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState<Record<string, unknown> | null>(null);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -80,6 +81,8 @@ export default function ProductDetailsPage() {
   const activeOriginalPrice = selectedVariant ? (selectedVariant.originalPrice as number) : product.originalBasePrice;
   const savings = activeOriginalPrice - activePrice;
   const discountPercent = Math.round((savings / activeOriginalPrice) * 100);
+  
+  const mainImage = activeImage || product.images?.[0] || '/images/placeholder.png';
 
   // Merge variant-specific RAM & Storage into the base attributes for live spec display
   const activeAttributes: Record<string, string> = {
@@ -106,9 +109,10 @@ export default function ProductDetailsPage() {
         <div className="space-y-4">
           <div className="aspect-square relative bg-gradient-to-b from-muted/50 to-muted rounded-2xl overflow-hidden border">
             <Image
-              src={product.image}
+              src={mainImage}
               alt={product.title}
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
               className="object-contain p-8 mix-blend-multiply dark:mix-blend-normal"
               priority
             />
@@ -120,20 +124,31 @@ export default function ProductDetailsPage() {
             )}
           </div>
           
-          {/* Mock Thumbnails */}
-          <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-            {[1, 2, 3].map((i) => (
-              <button key={i} className={`relative aspect-square w-24 rounded-lg overflow-hidden border-2 transition-all ${i === 1 ? 'border-primary ring-2 ring-primary/20' : 'border-muted hover:border-primary/50'}`}>
-                <div className="absolute inset-0 bg-muted" />
-                <Image
-                  src={product.image}
-                  alt={`${product.title} view ${i}`}
-                  fill
-                  className="object-contain p-2 mix-blend-multiply dark:mix-blend-normal"
-                />
-              </button>
-            ))}
-          </div>
+          {/* Thumbnails */}
+          {product.images && product.images.length > 1 && (
+            <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+              {product.images.map((img, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => setActiveImage(img)}
+                  className={`relative aspect-square w-24 rounded-lg overflow-hidden border-2 transition-all ${
+                    (activeImage === img || (!activeImage && i === 0)) 
+                      ? 'border-primary ring-2 ring-primary/20' 
+                      : 'border-muted hover:border-primary/50'
+                  }`}
+                >
+                  <div className="absolute inset-0 bg-muted" />
+                  <Image
+                    src={img}
+                    alt={`${product.title} view ${i + 1}`}
+                    fill
+                    sizes="96px"
+                    className="object-contain p-2 mix-blend-multiply dark:mix-blend-normal"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right: Product Info & Actions */}

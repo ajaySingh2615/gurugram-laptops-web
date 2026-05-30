@@ -40,7 +40,7 @@ const productSchema = z.object({
   category: z.string().min(1, "Category is required"),
   subcategory: z.string().min(1, "Subcategory is required"),
   isRefurbished: z.boolean().default(false),
-  image: z.string().min(1, "Image URL is required"), // Not strict URL validation to allow relative paths like /images/...
+  images: z.array(z.string()).min(1, "At least one image is required"),
   basePrice: z.coerce.number().min(0),
   originalBasePrice: z.coerce.number().min(0),
   inStock: z.boolean().default(true),
@@ -64,7 +64,6 @@ type ProductFormValues = z.infer<typeof productSchema>;
 export default function AddProductPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<ProductFormValues>({
@@ -76,7 +75,7 @@ export default function AddProductPage() {
       category: "",
       subcategory: "",
       isRefurbished: false,
-      image: "",
+      images: [],
       basePrice: 0,
       originalBasePrice: 0,
       inStock: true,
@@ -128,8 +127,8 @@ export default function AddProductPage() {
   };
 
   const onSubmit = async (data: ProductFormValues) => {
-    if (!data.image) {
-      toast.error("Please upload a product image first.");
+    if (data.images.length === 0) {
+      toast.error("Please upload at least one product image.");
       return;
     }
     setIsSubmitting(true);
@@ -149,8 +148,8 @@ export default function AddProductPage() {
     setIsUploading(true);
     try {
       const result = await UploadService.uploadImage(file);
-      form.setValue("image", result.data.url);
-      setImagePreview(result.data.url);
+      const currentImages = form.getValues("images") || [];
+      form.setValue("images", [...currentImages, result.data.url]);
       toast.success("Image uploaded successfully!");
     } catch (error) {
       console.error(error);
@@ -375,18 +374,38 @@ export default function AddProductPage() {
               {/* Image Card */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Product Image</CardTitle>
-                  <CardDescription>Upload a clear product photo (max 5 MB, JPEG/PNG/WebP).</CardDescription>
+                  <CardTitle>Product Images</CardTitle>
+                  <CardDescription>Upload product photos (max 5 MB each, JPEG/PNG/WebP). First image will be the primary thumbnail.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {/* Images Grid */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    {(form.watch("images") || []).map((img, idx) => (
+                      <div key={idx} className="relative aspect-video rounded-xl border overflow-hidden group">
+                        <Image src={img} alt={`Product ${idx}`} fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover" />
+                        {idx === 0 && (
+                          <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-md font-medium shadow-sm">Primary</div>
+                        )}
+                        <Button 
+                          type="button" 
+                          variant="destructive" 
+                          size="icon" 
+                          className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => {
+                            const current = form.getValues("images");
+                            form.setValue("images", current.filter((_, i) => i !== idx));
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+
                   {/* Drop Zone */}
                   <label
                     htmlFor="image-upload-input"
-                    className={`relative flex flex-col items-center justify-center w-full aspect-video rounded-xl border-2 border-dashed cursor-pointer transition-all ${
-                      imagePreview
-                        ? 'border-primary/40 bg-primary/5'
-                        : 'border-muted-foreground/30 bg-muted/40 hover:border-primary/50 hover:bg-muted/60'
-                    }`}
+                    className={`relative flex flex-col items-center justify-center w-full aspect-video rounded-xl border-2 border-dashed cursor-pointer transition-all border-muted-foreground/30 bg-muted/40 hover:border-primary/50 hover:bg-muted/60`}
                   >
                     {isUploading && (
                       <div className="absolute inset-0 bg-background/70 flex flex-col items-center justify-center rounded-xl z-10">
@@ -394,26 +413,11 @@ export default function AddProductPage() {
                         <span className="text-sm font-medium">Uploading to Cloudinary...</span>
                       </div>
                     )}
-                    {imagePreview ? (
-                      <>
-                        <Image
-                          src={imagePreview}
-                          alt="Product preview"
-                          fill
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                          className="object-contain p-4 rounded-xl"
-                        />
-                        <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
-                          <CheckCircle className="h-4 w-4" />
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center text-muted-foreground p-6">
-                        <Upload className="h-10 w-10 mb-3" />
-                        <span className="text-sm font-medium">Click or drag & drop to upload</span>
-                        <span className="text-xs mt-1">JPEG, PNG, WebP — up to 5 MB</span>
-                      </div>
-                    )}
+                    <div className="flex flex-col items-center justify-center text-muted-foreground p-6">
+                      <Upload className="h-10 w-10 mb-3" />
+                      <span className="text-sm font-medium">Click or drag & drop to upload</span>
+                      <span className="text-xs mt-1">JPEG, PNG, WebP — up to 5 MB</span>
+                    </div>
                     <input
                       id="image-upload-input"
                       type="file"
@@ -425,20 +429,6 @@ export default function AddProductPage() {
                       }}
                     />
                   </label>
-                  {/* Hidden form field to store the Cloudinary URL */}
-                  <FormField
-                    control={form.control}
-                    name="image"
-                    render={({ field }) => (
-                      <FormItem className="mt-3">
-                        <FormLabel className="text-xs text-muted-foreground">Cloudinary URL (auto-filled)</FormLabel>
-                        <FormControl>
-                          <Input {...field} readOnly className="text-xs text-muted-foreground bg-muted" placeholder="Will be filled after upload..." />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </CardContent>
               </Card>
 
