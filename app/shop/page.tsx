@@ -21,6 +21,8 @@ import {
   Star,
   CheckCircle2,
   ChevronRight,
+  Plus,
+  Minus
 } from "lucide-react";
 import { ProductService } from "@/services/product.service";
 import { useCartStore } from "@/store/cart.store";
@@ -58,7 +60,7 @@ export default function ShopPage() {
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [priceRange, setPriceRange] = useState<number[]>([100, 200000]);
   const [inStockOnly, setInStockOnly] = useState(false);
-  const { addItem, setIsOpen } = useCartStore();
+  const { addItem, setIsOpen, items, updateQuantity } = useCartStore();
 
   const handleAddToCart = async (product: ShopProduct) => {
     await addItem({
@@ -375,7 +377,8 @@ export default function ShopPage() {
                 const discountPercent = Math.round(
                   (savings / product.originalBasePrice) * 100,
                 );
-                const hasVariants = (product.variants?.length ?? 0) > 0;
+                const hasVariants = product.enableVariants && Array.isArray(product.variants) && product.variants.length > 0;
+                const cartItem = items.find(i => i.productId === product.id && i.variantName === product.variants?.[0]?.name);
 
                 return (
                   <Card
@@ -495,14 +498,26 @@ export default function ShopPage() {
                           Choose Options
                         </Button>
                       ) : (
-                        <Button 
-                          className="w-full" 
-                          disabled={!product.inStock}
-                          onClick={() => handleAddToCart(product)}
-                        >
-                          <ShoppingCart className="w-4 h-4 mr-2" />
-                          {product.inStock ? "Add to Cart" : "Out of Stock"}
-                        </Button>
+                        cartItem ? (
+                          <div className="flex items-center justify-between border rounded-md h-10 w-full">
+                            <Button variant="ghost" size="icon" className="h-full w-10 rounded-none" onClick={() => updateQuantity(cartItem.id!, cartItem.quantity - 1)}>
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                            <span className="w-10 text-center font-medium">{cartItem.quantity}</span>
+                            <Button variant="ghost" size="icon" className="h-full w-10 rounded-none" onClick={() => updateQuantity(cartItem.id!, cartItem.quantity + 1)}>
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button 
+                            className="w-full" 
+                            disabled={!product.inStock}
+                            onClick={() => handleAddToCart(product)}
+                          >
+                            <ShoppingCart className="w-4 h-4 mr-2" />
+                            {product.inStock ? "Add to Cart" : "Out of Stock"}
+                          </Button>
+                        )
                       )}
                     </CardFooter>
                   </Card>

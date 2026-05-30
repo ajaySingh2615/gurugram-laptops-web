@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, notFound } from "next/navigation";
-import { ChevronRight, Star, ShoppingCart, Truck, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { ChevronRight, Star, ShoppingCart, Truck, ShieldCheck, CheckCircle2, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -30,7 +30,7 @@ export default function ProductDetailsPage() {
   const [selectedVariant, setSelectedVariant] = useState<Record<string, unknown> | null>(null);
   const [activeImage, setActiveImage] = useState<string | null>(null);
   
-  const { addItem, setIsOpen } = useCartStore();
+  const { addItem, setIsOpen, items, updateQuantity } = useCartStore();
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -254,11 +254,29 @@ export default function ProductDetailsPage() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
-            <Button size="lg" className="flex-1 text-base h-14" disabled={!product.inStock} onClick={handleAddToCart}>
-              <ShoppingCart className="w-5 h-5 mr-2" />
-              Add to Cart
-            </Button>
-            <Button size="lg" variant="secondary" className="flex-1 text-base h-14" disabled={!product.inStock}>
+            {(() => {
+              const cartItem = items.find(i => i.productId === product?.id && i.variantName === (selectedVariant?.name as string | undefined));
+              if (cartItem) {
+                return (
+                  <div className="flex-1 flex items-center justify-between border-2 rounded-md h-14">
+                    <Button variant="ghost" className="h-full w-14 rounded-none hover:bg-muted" onClick={() => updateQuantity(cartItem.id!, cartItem.quantity - 1)}>
+                      <Minus className="h-5 w-5" />
+                    </Button>
+                    <span className="text-xl font-semibold w-14 text-center">{cartItem.quantity}</span>
+                    <Button variant="ghost" className="h-full w-14 rounded-none hover:bg-muted" onClick={() => updateQuantity(cartItem.id!, cartItem.quantity + 1)}>
+                      <Plus className="h-5 w-5" />
+                    </Button>
+                  </div>
+                );
+              }
+              return (
+                <Button size="lg" className="flex-1 text-base h-14" disabled={!product?.inStock} onClick={handleAddToCart}>
+                  <ShoppingCart className="w-5 h-5 mr-2" />
+                  Add to Cart
+                </Button>
+              );
+            })()}
+            <Button size="lg" variant="secondary" className="flex-1 text-base h-14" disabled={!product?.inStock}>
               Buy Now
             </Button>
           </div>
