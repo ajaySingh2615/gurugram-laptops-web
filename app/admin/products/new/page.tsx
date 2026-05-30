@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { ArrowLeft, Plus, Trash2, Save, Upload, CheckCircle, Loader2, Star } from "lucide-react";
 import { ProductService } from "@/services/product.service";
+import { CategoryService, type Category } from "@/services/category.service";
 import { UploadService } from "@/services/upload.service";
 import Image from "next/image";
 
@@ -65,6 +66,19 @@ export default function AddProductPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await CategoryService.getAllCategories();
+        setCategories((response.data as Category[]) || []);
+      } catch (error) {
+        console.error("Failed to load categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const form = useForm<ProductFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -256,9 +270,9 @@ export default function AddProductPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Laptops">Laptops</SelectItem>
-                              <SelectItem value="Peripherals">Peripherals</SelectItem>
-                              <SelectItem value="Converters">Converters</SelectItem>
+                              {categories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />

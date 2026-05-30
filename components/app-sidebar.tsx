@@ -41,6 +41,13 @@ const data = {
         <PackageIcon />
       ),
     },
+    {
+      title: "Categories",
+      url: "/admin/categories",
+      icon: (
+        <FolderIcon />
+      ),
+    },
   ],
   navClouds: [
     {
