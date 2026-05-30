@@ -26,6 +26,7 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { ProductService } from "@/services/product.service";
+import { toast } from "sonner";
 
 interface ProductData {
   id: string;
@@ -58,6 +59,19 @@ export default function AdminProductsPage() {
     };
     fetchProducts();
   }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this product?")) return;
+    
+    try {
+      await ProductService.deleteProduct(id);
+      setProducts(products.filter(p => p.id !== id));
+      toast.success("Product deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete product");
+    }
+  };
 
   const filteredProducts = products.filter(p => 
     p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -180,11 +194,11 @@ export default function AdminProductsPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuGroup>
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem render={<Link href={`/admin/products/${product.id}`} />}>
+                          <DropdownMenuItem render={<Link href={`/admin/products/${product.id}/edit`} />}>
                             <Edit className="mr-2 h-4 w-4" /> Edit
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
+                          <DropdownMenuItem className="text-destructive cursor-pointer" onClick={() => handleDelete(product.id)}>
                             <Trash2 className="mr-2 h-4 w-4" /> Delete
                           </DropdownMenuItem>
                         </DropdownMenuGroup>

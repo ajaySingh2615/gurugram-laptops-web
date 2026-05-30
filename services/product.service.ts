@@ -20,4 +20,14 @@ export class ProductService {
     const response = await apiClient.get<ProductResponse>(`/products/${id}`);
     return response.data;
   }
+
+  public static async updateProduct(id: string, data: unknown): Promise<ProductResponse> {
+    const response = await apiClient.put<ProductResponse>(`/products/${id}`, data);
+    return response.data;
+  }
+
+  public static async deleteProduct(id: string): Promise<ProductResponse> {
+    const response = await apiClient.delete<ProductResponse>(`/products/${id}`);
+    return response.data;
+  }
 }
