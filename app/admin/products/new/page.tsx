@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowLeft, Plus, Trash2, Save, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, Upload, CheckCircle, Loader2 } from "lucide-react";
 import { ProductService } from "@/services/product.service";
+import { UploadService } from "@/services/upload.service";
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +64,8 @@ type ProductFormValues = z.infer<typeof productSchema>;
 export default function AddProductPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<ProductFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -72,7 +76,7 @@ export default function AddProductPage() {
       category: "",
       subcategory: "",
       isRefurbished: false,
-      image: "/images/laptop_thinkpad_1780075781346.png", // Default placeholder for demo
+      image: "",
       basePrice: 0,
       originalBasePrice: 0,
       inStock: true,
@@ -124,6 +128,10 @@ export default function AddProductPage() {
   };
 
   const onSubmit = async (data: ProductFormValues) => {
+    if (!data.image) {
+      toast.error("Please upload a product image first.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       await ProductService.createProduct(data);
@@ -134,6 +142,21 @@ export default function AddProductPage() {
       toast.error("Failed to create product");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const result = await UploadService.uploadImage(file);
+      form.setValue("image", result.data.url);
+      setImagePreview(result.data.url);
+      toast.success("Image uploaded successfully!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Image upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -353,20 +376,64 @@ export default function AddProductPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Product Image</CardTitle>
+                  <CardDescription>Upload a clear product photo (max 5 MB, JPEG/PNG/WebP).</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="aspect-video w-full rounded-lg border-2 border-dashed bg-muted/50 flex flex-col items-center justify-center mb-4 text-muted-foreground">
-                    <ImageIcon className="h-8 w-8 mb-2" />
-                    <span className="text-sm">Image Upload (Phase 3)</span>
-                  </div>
+                  {/* Drop Zone */}
+                  <label
+                    htmlFor="image-upload-input"
+                    className={`relative flex flex-col items-center justify-center w-full aspect-video rounded-xl border-2 border-dashed cursor-pointer transition-all ${
+                      imagePreview
+                        ? 'border-primary/40 bg-primary/5'
+                        : 'border-muted-foreground/30 bg-muted/40 hover:border-primary/50 hover:bg-muted/60'
+                    }`}
+                  >
+                    {isUploading && (
+                      <div className="absolute inset-0 bg-background/70 flex flex-col items-center justify-center rounded-xl z-10">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                        <span className="text-sm font-medium">Uploading to Cloudinary...</span>
+                      </div>
+                    )}
+                    {imagePreview ? (
+                      <>
+                        <Image
+                          src={imagePreview}
+                          alt="Product preview"
+                          fill
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          className="object-contain p-4 rounded-xl"
+                        />
+                        <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
+                          <CheckCircle className="h-4 w-4" />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-muted-foreground p-6">
+                        <Upload className="h-10 w-10 mb-3" />
+                        <span className="text-sm font-medium">Click or drag & drop to upload</span>
+                        <span className="text-xs mt-1">JPEG, PNG, WebP — up to 5 MB</span>
+                      </div>
+                    )}
+                    <input
+                      id="image-upload-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(file);
+                      }}
+                    />
+                  </label>
+                  {/* Hidden form field to store the Cloudinary URL */}
                   <FormField
                     control={form.control}
                     name="image"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Image URL / Path</FormLabel>
+                      <FormItem className="mt-3">
+                        <FormLabel className="text-xs text-muted-foreground">Cloudinary URL (auto-filled)</FormLabel>
                         <FormControl>
-                          <Input placeholder="/images/placeholder.png" {...field} />
+                          <Input {...field} readOnly className="text-xs text-muted-foreground bg-muted" placeholder="Will be filled after upload..." />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
