@@ -11,6 +11,7 @@ interface AuthState {
   } | null;
   isLoading: boolean;
   isInitialized: boolean;
+  isAuthenticated: boolean;
   
   // Actions
   initializeAuth: () => Promise<void>;
@@ -22,6 +23,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isLoading: true,
   isInitialized: false,
+  isAuthenticated: false,
 
   initializeAuth: async () => {
     try {
@@ -31,24 +33,24 @@ export const useAuthStore = create<AuthState>((set) => ({
       // If the user was banned by an admin, kick them out immediately!
       if (userData.status === 'BANNED') {
         await AuthService.logout();
-        set({ user: null, isInitialized: true, isLoading: false });
+        set({ user: null, isInitialized: true, isLoading: false, isAuthenticated: false });
         return;
       }
 
-      set({ user: userData, isInitialized: true, isLoading: false });
+      set({ user: userData, isInitialized: true, isLoading: false, isAuthenticated: true });
     } catch (error) {
       // If getMe fails (401), the user is not logged in.
-      set({ user: null, isInitialized: true, isLoading: false });
+      set({ user: null, isInitialized: true, isLoading: false, isAuthenticated: false });
     }
   },
 
-  setUser: (user) => set({ user }),
+  setUser: (user) => set({ user, isAuthenticated: !!user }),
 
   logout: async () => {
     try {
       await AuthService.logout();
     } finally {
-      set({ user: null });
+      set({ user: null, isAuthenticated: false });
     }
   }
 }));

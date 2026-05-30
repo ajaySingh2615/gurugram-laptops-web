@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, ShoppingCart } from 'lucide-react';
+import { useCartStore } from '@/store/cart.store';
+import { CartDrawer } from '@/components/cart-drawer';
 
 import {
   NavigationMenu,
@@ -17,6 +19,7 @@ import {
 
 export function Navbar() {
   const { user, isInitialized, logout } = useAuthStore();
+  const { setIsOpen, items } = useCartStore();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -61,8 +64,17 @@ export function Navbar() {
           </NavigationMenu>
         </div>
 
-        {/* Right Side: Auth State */}
-        <div className="flex items-center gap-6">
+        {/* Right Side: Auth State & Cart */}
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" className="relative rounded-full" onClick={() => setIsOpen(true)}>
+            <ShoppingCart className="h-5 w-5" />
+            {items.length > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                {items.length}
+              </span>
+            )}
+          </Button>
+
           {!isInitialized ? (
             <div className="h-9 w-24 animate-pulse bg-muted rounded-full"></div>
           ) : user ? (
@@ -95,6 +107,7 @@ export function Navbar() {
         </div>
 
       </div>
+      <CartDrawer />
     </nav>
   );
 }

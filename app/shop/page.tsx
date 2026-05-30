@@ -23,6 +23,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { ProductService } from "@/services/product.service";
+import { useCartStore } from "@/store/cart.store";
 
 export interface ShopProduct {
   id: string;
@@ -39,7 +40,7 @@ export interface ShopProduct {
   tags?: string[];
   enableVariants: boolean;
   attributes: Record<string, string>;
-  variants?: Record<string, unknown>[];
+  variants?: { id?: string; name: string; price: number; originalPrice?: number; inStock?: boolean; }[];
 }
 
 // Extracted unique filter options based on the active category
@@ -57,6 +58,17 @@ export default function ShopPage() {
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [priceRange, setPriceRange] = useState<number[]>([100, 200000]);
   const [inStockOnly, setInStockOnly] = useState(false);
+  const { addItem, setIsOpen } = useCartStore();
+
+  const handleAddToCart = async (product: ShopProduct) => {
+    await addItem({
+      productId: product.id,
+      quantity: 1,
+      variantName: product.variants?.[0]?.name,
+      product: product
+    });
+    setIsOpen(true);
+  };
   
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -483,7 +495,11 @@ export default function ShopPage() {
                           Choose Options
                         </Button>
                       ) : (
-                        <Button className="w-full" disabled={!product.inStock}>
+                        <Button 
+                          className="w-full" 
+                          disabled={!product.inStock}
+                          onClick={() => handleAddToCart(product)}
+                        >
                           <ShoppingCart className="w-4 h-4 mr-2" />
                           {product.inStock ? "Add to Cart" : "Out of Stock"}
                         </Button>

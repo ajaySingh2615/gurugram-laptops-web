@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProductService } from "@/services/product.service";
+import { useCartStore } from "@/store/cart.store";
 import type { ShopProduct } from "../page";
 
 const formatInr = (amount: number) => {
@@ -28,6 +29,19 @@ export default function ProductDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState<Record<string, unknown> | null>(null);
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  
+  const { addItem, setIsOpen } = useCartStore();
+
+  const handleAddToCart = async () => {
+    if (!product) return;
+    await addItem({
+      productId: product.id,
+      quantity: 1,
+      variantName: selectedVariant?.name as string,
+      product: product // pass populated product for local cart calculating total
+    });
+    setIsOpen(true);
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -240,7 +254,7 @@ export default function ProductDetailsPage() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
-            <Button size="lg" className="flex-1 text-base h-14" disabled={!product.inStock}>
+            <Button size="lg" className="flex-1 text-base h-14" disabled={!product.inStock} onClick={handleAddToCart}>
               <ShoppingCart className="w-5 h-5 mr-2" />
               Add to Cart
             </Button>
