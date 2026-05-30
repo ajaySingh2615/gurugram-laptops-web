@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { AuthService } from '@/services/auth.service';
+import { useCartStore } from './cart.store';
 
 interface AuthState {
   user: { 
@@ -38,6 +39,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
 
       set({ user: userData, isInitialized: true, isLoading: false, isAuthenticated: true });
+
+      // Trigger cart sync IMMEDIATELY after auth initializes successfully
+      const { items, syncLocalCart, fetchCart } = useCartStore.getState();
+      const hasLocalItems = items.some(i => !i.id || i.id.startsWith('local_'));
+      if (hasLocalItems) {
+        await syncLocalCart();
+      } else {
+        await fetchCart();
+      }
     } catch (error) {
       // If getMe fails (401), the user is not logged in.
       set({ user: null, isInitialized: true, isLoading: false, isAuthenticated: false });
@@ -50,6 +60,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await AuthService.logout();
     } finally {
+      useCartStore.getState().clearCart();
       set({ user: null, isAuthenticated: false });
     }
   }

@@ -43,7 +43,13 @@ export class CartService {
   }
 
   static async syncCart(items: CartItem[]) {
-    const res = await apiClient.post<{ success: boolean; data: Cart }>('/cart/sync', { items });
+    // Strip out the fully populated product object to keep payload lightweight
+    const payload = items.map(i => ({
+      productId: i.productId,
+      quantity: i.quantity,
+      variantName: i.variantName
+    }));
+    const res = await apiClient.post<{ success: boolean; data: Cart }>('/cart/sync', { items: payload });
     return res.data;
   }
 }
