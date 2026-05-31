@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Loader2, MapPin, Package, Phone, User, Calendar, CreditCard } from "lucide-react";
+import { Loader2, MapPin, Package, Phone, User, Calendar, CreditCard, CheckCircle2, Circle, XCircle } from "lucide-react";
 
 import type { Order } from "@/services/order.service";
 import { OrderService } from "@/services/order.service";
@@ -50,6 +50,13 @@ const formatInr = (amount: number) => {
   }).format(amount);
 };
 
+const ORDER_STAGES = [
+  { id: "PENDING", label: "Order Placed" },
+  { id: "PROCESSING", label: "Packing" },
+  { id: "SHIPPED", label: "On the Way" },
+  { id: "DELIVERED", label: "Delivered" },
+];
+
 export function OrderDetailsDialog({
   order,
   open,
@@ -94,7 +101,57 @@ export function OrderDetailsDialog({
           </div>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Order Tracker Timeline */}
+        <div className="my-6">
+          {order.status === "CANCELLED" ? (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-600 rounded-lg p-4 flex items-center gap-3">
+              <XCircle className="w-5 h-5" />
+              <div>
+                <p className="font-semibold">Order Cancelled</p>
+                <p className="text-sm opacity-90">This order has been cancelled and will not be delivered.</p>
+              </div>
+            </div>
+          ) : (() => {
+            const currentStageIndex = ORDER_STAGES.findIndex((s) => s.id === order.status);
+            const progressPercentage = Math.max(0, (currentStageIndex / (ORDER_STAGES.length - 1)) * 100);
+
+            return (
+              <div className="relative flex justify-between items-center max-w-2xl mx-auto px-4 sm:px-10">
+                {/* Connecting Background Line - Gray */}
+                <div className="absolute left-[10%] right-[10%] top-4 h-[3px] bg-zinc-200 dark:bg-zinc-800 rounded-full z-0"></div>
+                {/* Connecting Background Line - Active Green */}
+                <div 
+                  className="absolute left-[10%] top-4 h-[3px] bg-emerald-500 rounded-full z-0 transition-all duration-1000 ease-in-out" 
+                  style={{ width: `calc(${progressPercentage}% * 0.8)` }}
+                ></div>
+                
+                {ORDER_STAGES.map((stage, index) => {
+                  const isCompleted = index < currentStageIndex;
+                  const isCurrent = index === currentStageIndex;
+                  
+                  return (
+                    <div key={stage.id} className="relative z-10 flex flex-col items-center gap-2">
+                      <div 
+                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 ${
+                          isCompleted ? "bg-emerald-500 text-white shadow-md border-2 border-emerald-500" :
+                          isCurrent ? "bg-white dark:bg-zinc-950 text-emerald-500 border-[3px] border-emerald-500 ring-4 ring-emerald-500/20 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]" :
+                          "bg-white dark:bg-zinc-950 text-zinc-300 dark:text-zinc-600 border-2 border-zinc-200 dark:border-zinc-800"
+                        }`}
+                      >
+                        {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-3 h-3 fill-current" />}
+                      </div>
+                      <span className={`text-xs font-semibold text-center absolute top-10 whitespace-nowrap transition-colors duration-500 ${isCurrent ? "text-emerald-600 dark:text-emerald-500" : isCompleted ? "text-zinc-800 dark:text-zinc-200" : "text-zinc-400 dark:text-zinc-500"}`}>
+                        {stage.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
           {/* Left Column: Customer & Shipping */}
           <div className="space-y-6">
             <div>
