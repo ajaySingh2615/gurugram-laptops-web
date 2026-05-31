@@ -55,6 +55,12 @@ export default function AdminOrdersPage() {
       setIsLoading(true);
       const data = await OrderService.getAllOrders();
       setOrders(data);
+      
+      setSelectedOrder(prev => {
+        if (!prev) return null;
+        const updated = data.find(o => o.id === prev.id);
+        return updated || prev;
+      });
     } catch {
       toast.error("Failed to load orders");
     } finally {
