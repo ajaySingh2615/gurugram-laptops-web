@@ -1,41 +1,47 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { toast } from "sonner";
-import { CheckCircle2, MapPin, Truck, CreditCard, ShieldCheck, Loader2 } from "lucide-react";
+import {
+  CheckCircle2,
+  Truck,
+  CreditCard,
+  ShieldCheck,
+  Loader2,
+  Plus,
+  MapPin,
+} from "lucide-react";
 
 import { useAuthStore } from "@/store/auth.store";
 import { useCartStore } from "@/store/cart.store";
 import { OrderService } from "@/services/order.service";
+import { AddressService, type Address } from "@/services/address.service";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 
-const shippingSchema = z.object({
-  fullName: z.string().min(2, "Full name is required"),
-  address: z.string().min(5, "Address is required"),
-  city: z.string().min(2, "City is required"),
-  state: z.string().min(2, "State is required"),
-  zipCode: z.string().min(5, "Valid ZIP code is required"),
-  phone: z.string().min(10, "Valid phone number is required"),
-});
-
-type ShippingFormValues = z.infer<typeof shippingSchema>;
+import { AddressCard } from "@/components/address-card";
+import {
+  AddressFormDialog,
+  type AddressFormValues,
+} from "@/components/address-form-dialog";
 
 const formatInr = (amount: number) => {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
     maximumFractionDigits: 0,
   }).format(amount);
 };
@@ -44,29 +50,40 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { user, isInitialized, isAuthenticated } = useAuthStore();
   const { items, getCartTotal, clearCart } = useCartStore();
-  
+
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
-  
-  const form = useForm<ShippingFormValues>({
-    // @ts-expect-error - mismatch between zod versions in Next.js app router
-    resolver: zodResolver(shippingSchema),
-    defaultValues: {
-      fullName: "",
-      address: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      phone: "",
-    },
-  });
 
-  // Pre-fill user data if available
-  useEffect(() => {
-    if (user?.fullName) {
-      form.setValue("fullName", user.fullName);
+  // Address state
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [isSavingAddress, setIsSavingAddress] = useState(false);
+
+  const fetchAddresses = useCallback(async () => {
+    try {
+      setIsLoadingAddresses(true);
+      const data = await AddressService.getAddresses();
+      setAddresses(data);
+      const defaultAddr = data.find((a) => a.isDefault);
+      setSelectedAddressId(defaultAddr?.id ?? data[0]?.id ?? null);
+    } catch {
+      toast.error("Failed to load addresses");
+    } finally {
+      setIsLoadingAddresses(false);
     }
-  }, [user, form]);
+  }, []);
+
+  useEffect(() => {
+    if (isInitialized && isAuthenticated) {
+      const load = async () => {
+        await fetchAddresses();
+      };
+      load();
+    }
+  }, [isInitialized, isAuthenticated, fetchAddresses]);
 
   useEffect(() => {
     if (isInitialized && !isAuthenticated) {
@@ -75,6 +92,86 @@ export default function CheckoutPage() {
     }
   }, [isInitialized, isAuthenticated, router]);
 
+  // --- Address handlers ---
+  const handleCreateOrUpdateAddress = async (data: AddressFormValues) => {
+    try {
+      setIsSavingAddress(true);
+      if (editingAddress) {
+        await AddressService.updateAddress(editingAddress.id, data);
+        toast.success("Address updated");
+      } else {
+        await AddressService.createAddress(data);
+        toast.success("Address added");
+      }
+      setDialogOpen(false);
+      setEditingAddress(null);
+      await fetchAddresses();
+    } catch {
+      toast.error("Failed to save address");
+    } finally {
+      setIsSavingAddress(false);
+    }
+  };
+
+  const handleEditAddress = (address: Address) => {
+    setEditingAddress(address);
+    setDialogOpen(true);
+  };
+
+  const handleDeleteAddress = async (address: Address) => {
+    try {
+      await AddressService.deleteAddress(address.id);
+      toast.success("Address deleted");
+      await fetchAddresses();
+    } catch {
+      toast.error("Failed to delete address");
+    }
+  };
+
+  const handleSetDefault = async (address: Address) => {
+    try {
+      await AddressService.setDefault(address.id);
+      toast.success("Default address updated");
+      await fetchAddresses();
+    } catch {
+      toast.error("Failed to update default");
+    }
+  };
+
+  // --- Order placement ---
+  const onPlaceOrder = async () => {
+    const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
+    if (!selectedAddress) {
+      toast.error("Please select a delivery address");
+      return;
+    }
+
+    try {
+      setIsPlacingOrder(true);
+      const shippingAddress = {
+        fullName: selectedAddress.fullName,
+        address: selectedAddress.address,
+        city: selectedAddress.city,
+        state: selectedAddress.state,
+        zipCode: selectedAddress.zipCode,
+        phone: selectedAddress.phone,
+      };
+      const order = await OrderService.createOrder(shippingAddress);
+      clearCart();
+      setOrderSuccess(true);
+      toast.success(order.message || "Order placed successfully!");
+      setTimeout(() => {
+        router.push("/shop");
+      }, 3000);
+    } catch (error: unknown) {
+      const apiError = error as { response?: { data?: { message?: string } } };
+      toast.error(apiError.response?.data?.message || "Failed to place order");
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
+
+  // --- Guards ---
   if (!isInitialized || !isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -91,37 +188,19 @@ export default function CheckoutPage() {
         </div>
         <h1 className="text-2xl font-bold mb-2">Your Cart is Empty</h1>
         <p className="text-muted-foreground mb-8">
-          You have no items in your cart to checkout. Let&apos;s go find some great products!
+          You have no items in your cart to checkout. Let&apos;s go find some
+          great products!
         </p>
-        <Button size="lg" className="w-full" onClick={() => router.push("/shop")}>
+        <Button
+          size="lg"
+          className="w-full"
+          onClick={() => router.push("/shop")}
+        >
           Continue Shopping
         </Button>
       </div>
     );
   }
-
-  const subtotal = getCartTotal();
-  const shipping = subtotal > 500 ? 0 : 50; // Free shipping over 500
-  const total = subtotal + shipping;
-
-  const onSubmit = async (data: ShippingFormValues) => {
-    try {
-      setIsPlacingOrder(true);
-      const order = await OrderService.createOrder(data);
-      clearCart();
-      setOrderSuccess(true);
-      toast.success(order.message || "Order placed successfully!");
-      // Optionally redirect to an order history page after a delay
-      setTimeout(() => {
-        router.push("/shop"); // Or /my-orders
-      }, 3000);
-    } catch (error: unknown) {
-      const apiError = error as { response?: { data?: { message?: string } } };
-      toast.error(apiError.response?.data?.message || "Failed to place order");
-    } finally {
-      setIsPlacingOrder(false);
-    }
-  };
 
   if (orderSuccess) {
     return (
@@ -131,7 +210,8 @@ export default function CheckoutPage() {
         </div>
         <h1 className="text-3xl font-bold mb-4">Order Placed Successfully!</h1>
         <p className="text-muted-foreground mb-8 text-lg">
-          Thank you for your purchase. Your order is being processed and will be shipped soon.
+          Thank you for your purchase. Your order is being processed and will be
+          shipped soon.
         </p>
         <Button size="lg" onClick={() => router.push("/shop")}>
           Continue Shopping
@@ -139,6 +219,10 @@ export default function CheckoutPage() {
       </div>
     );
   }
+
+  const subtotal = getCartTotal();
+  const shipping = subtotal > 500 ? 0 : 50;
+  const total = subtotal + shipping;
 
   return (
     <div className="bg-muted/30 min-h-screen pb-20">
@@ -154,117 +238,89 @@ export default function CheckoutPage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Left Column: Form & Payment */}
+          {/* Left Column: Address + Payment */}
           <div className="lg:col-span-7 space-y-6">
-            
-            {/* Shipping Address */}
+            {/* ─── Section 1: Delivery Address ─── */}
             <Card className="border-border/50 shadow-sm">
               <CardHeader className="bg-muted/30 pb-4">
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <div className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center text-primary text-sm font-bold">1</div>
-                  Shipping Address
-                </CardTitle>
-                <CardDescription>Where should we deliver your order?</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      <div className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center text-primary text-sm font-bold">
+                        1
+                      </div>
+                      Delivery Address
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      Select where you want your order delivered
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => {
+                      setEditingAddress(null);
+                      setDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add New
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="pt-6">
-                <Form {...form}>
-                  <form id="checkout-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="fullName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Full Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="John Doe" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="address"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Street Address</FormLabel>
-                          <FormControl>
-                            <Input placeholder="123 Main St, Apt 4B" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="city"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>City</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Mumbai" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="state"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>State</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Maharashtra" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                {isLoadingAddresses ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : addresses.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <MapPin className="w-8 h-8 text-muted-foreground" />
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="zipCode"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>ZIP Code</FormLabel>
-                            <FormControl>
-                              <Input placeholder="400001" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                    <h3 className="font-semibold text-lg mb-1">
+                      No Saved Addresses
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Add your first delivery address to proceed.
+                    </p>
+                    <Button
+                      onClick={() => {
+                        setEditingAddress(null);
+                        setDialogOpen(true);
+                      }}
+                      className="gap-1.5"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Address
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3">
+                    {addresses.map((addr) => (
+                      <AddressCard
+                        key={addr.id}
+                        address={addr}
+                        isSelected={selectedAddressId === addr.id}
+                        onSelect={(a) => setSelectedAddressId(a.id)}
+                        onEdit={handleEditAddress}
+                        onDelete={handleDeleteAddress}
+                        onSetDefault={handleSetDefault}
                       />
-                      <FormField
-                        control={form.control}
-                        name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Phone Number</FormLabel>
-                            <FormControl>
-                              <Input placeholder="+91 9876543210" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </form>
-                </Form>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Payment Method */}
+            {/* ─── Section 2: Payment Method ─── */}
             <Card className="border-border/50 shadow-sm">
               <CardHeader className="bg-muted/30 pb-4">
                 <CardTitle className="text-xl flex items-center gap-2">
-                  <div className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center text-primary text-sm font-bold">2</div>
+                  <div className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center text-primary text-sm font-bold">
+                    2
+                  </div>
                   Payment Method
                 </CardTitle>
                 <CardDescription>Choose how you want to pay</CardDescription>
@@ -279,14 +335,18 @@ export default function CheckoutPage() {
                       <div className="flex items-center gap-3">
                         <RadioGroupItem value="cod" id="cod" />
                         <div>
-                          <p className="font-semibold text-base">Cash on Delivery (COD)</p>
-                          <p className="text-sm text-muted-foreground">Pay when your order arrives.</p>
+                          <p className="font-semibold text-base">
+                            Cash on Delivery (COD)
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Pay when your order arrives.
+                          </p>
                         </div>
                       </div>
                       <Truck className="w-6 h-6 text-muted-foreground" />
                     </Label>
                   </div>
-                  
+
                   <div>
                     <Label
                       htmlFor="card"
@@ -295,8 +355,12 @@ export default function CheckoutPage() {
                       <div className="flex items-center gap-3">
                         <RadioGroupItem value="card" id="card" disabled />
                         <div>
-                          <p className="font-semibold text-base">Credit / Debit Card</p>
-                          <p className="text-sm text-muted-foreground">Coming soon...</p>
+                          <p className="font-semibold text-base">
+                            Credit / Debit Card
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Coming soon...
+                          </p>
                         </div>
                       </div>
                       <CreditCard className="w-6 h-6 text-muted-foreground" />
@@ -305,7 +369,6 @@ export default function CheckoutPage() {
                 </RadioGroup>
               </CardContent>
             </Card>
-
           </div>
 
           {/* Right Column: Order Summary */}
@@ -329,13 +392,20 @@ export default function CheckoutPage() {
                               sizes="64px"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No img</div>
+                            <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                              No img
+                            </div>
                           )}
                         </div>
                         <div className="flex flex-col flex-1 min-w-0 justify-center">
-                          <h4 className="text-sm font-medium line-clamp-1">{item.product?.title}</h4>
+                          <h4 className="text-sm font-medium line-clamp-1">
+                            {item.product?.title}
+                          </h4>
                           <div className="text-xs text-muted-foreground mt-1 flex justify-between items-center">
-                            <span>{item.variantName || 'Standard'} x {item.quantity}</span>
+                            <span>
+                              {item.variantName || "Standard"} x{" "}
+                              {item.quantity}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -351,7 +421,9 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Shipping</span>
-                      <span className="font-medium">{shipping === 0 ? "Free" : formatInr(shipping)}</span>
+                      <span className="font-medium">
+                        {shipping === 0 ? "Free" : formatInr(shipping)}
+                      </span>
                     </div>
                   </div>
 
@@ -359,17 +431,17 @@ export default function CheckoutPage() {
 
                   <div className="flex justify-between items-end">
                     <span className="text-lg font-semibold">Total</span>
-                    <span className="text-2xl font-bold text-primary">{formatInr(total)}</span>
+                    <span className="text-2xl font-bold text-primary">
+                      {formatInr(total)}
+                    </span>
                   </div>
-
                 </CardContent>
                 <CardFooter className="flex-col gap-4 bg-muted/20 pt-6">
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     className="w-full h-14 text-lg font-semibold shadow-md"
-                    type="submit"
-                    form="checkout-form"
-                    disabled={isPlacingOrder}
+                    disabled={isPlacingOrder || !selectedAddressId}
+                    onClick={onPlaceOrder}
                   >
                     {isPlacingOrder ? (
                       <>
@@ -380,6 +452,11 @@ export default function CheckoutPage() {
                       "Place Order"
                     )}
                   </Button>
+                  {!selectedAddressId && addresses.length > 0 && (
+                    <p className="text-xs text-destructive text-center">
+                      Please select a delivery address
+                    </p>
+                  )}
                   <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
                     <ShieldCheck className="w-3 h-3" />
                     Secure encrypted checkout
@@ -388,9 +465,20 @@ export default function CheckoutPage() {
               </Card>
             </div>
           </div>
-
         </div>
       </div>
+
+      {/* Address Form Dialog */}
+      <AddressFormDialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setEditingAddress(null);
+        }}
+        onSubmit={handleCreateOrUpdateAddress}
+        editingAddress={editingAddress}
+        isLoading={isSavingAddress}
+      />
     </div>
   );
 }
