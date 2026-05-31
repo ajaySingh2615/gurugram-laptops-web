@@ -34,6 +34,12 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   items?: OrderItem[];
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    avatarUrl?: string;
+  };
 }
 
 export class OrderService {
