@@ -106,8 +106,10 @@ export default function CheckoutPage() {
       setDialogOpen(false);
       setEditingAddress(null);
       await fetchAddresses();
-    } catch {
-      toast.error("Failed to save address");
+    } catch (error: unknown) {
+      const apiError = error as { response?: { data?: { message?: string } } };
+      const errorMessage = apiError?.response?.data?.message || "Failed to save address";
+      toast.error(errorMessage);
     } finally {
       setIsSavingAddress(false);
     }

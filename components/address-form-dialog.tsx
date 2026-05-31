@@ -22,7 +22,16 @@ const addressSchema = z.object({
   state: z.string().min(2, "State is required"),
   zipCode: z.string().min(5, "Valid ZIP code is required"),
   label: z.string().default("HOME"),
+  customLabel: z.string().optional(),
   isDefault: z.boolean().default(false),
+}).refine((data) => {
+  if (data.label === "OTHER" && (!data.customLabel || data.customLabel.trim().length === 0)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Please specify a custom label",
+  path: ["customLabel"],
 });
 
 export type AddressFormValues = z.infer<typeof addressSchema>;
@@ -55,6 +64,7 @@ export function AddressFormDialog({
       state: "",
       zipCode: "",
       label: "HOME",
+      customLabel: "",
       isDefault: false,
     },
   });
@@ -62,6 +72,7 @@ export function AddressFormDialog({
   // Pre-fill when editing
   useEffect(() => {
     if (editingAddress) {
+      const isStandardLabel = editingAddress.label === "HOME" || editingAddress.label === "WORK";
       form.reset({
         fullName: editingAddress.fullName,
         phone: editingAddress.phone,
@@ -69,7 +80,8 @@ export function AddressFormDialog({
         city: editingAddress.city,
         state: editingAddress.state,
         zipCode: editingAddress.zipCode,
-        label: editingAddress.label,
+        label: isStandardLabel ? editingAddress.label : "OTHER",
+        customLabel: isStandardLabel ? "" : editingAddress.label,
         isDefault: editingAddress.isDefault,
       });
     } else {
@@ -81,13 +93,21 @@ export function AddressFormDialog({
         state: "",
         zipCode: "",
         label: "HOME",
+        customLabel: "",
         isDefault: false,
       });
     }
   }, [editingAddress, form]);
 
   const handleSubmit = async (data: AddressFormValues) => {
-    await onSubmit(data);
+    const finalData = { ...data };
+    if (finalData.label === "OTHER" && finalData.customLabel) {
+      finalData.label = finalData.customLabel.trim().toUpperCase();
+    }
+    // Delete customLabel before sending to backend to avoid extra fields if necessary, though backend ignores it
+    delete finalData.customLabel;
+
+    await onSubmit(finalData);
     form.reset();
   };
 
@@ -204,20 +224,37 @@ export function AddressFormDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="HOME">🏠 Home</SelectItem>
-                        <SelectItem value="WORK">🏢 Work</SelectItem>
-                        <SelectItem value="OTHER">📍 Other</SelectItem>
+                        <SelectItem value="HOME">Home</SelectItem>
+                        <SelectItem value="WORK">Work</SelectItem>
+                        <SelectItem value="OTHER">Other</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              {form.watch("label") === "OTHER" && (
+                <FormField
+                  control={form.control}
+                  name="customLabel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Custom Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="E.g., Mom's House" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
               <FormField
                 control={form.control}
                 name="isDefault"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-2 space-y-0 pb-2">
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0 pb-2 col-span-2">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
