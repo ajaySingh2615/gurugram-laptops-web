@@ -86,10 +86,12 @@ export function Navbar() {
                   </Button>
                 </Link>
               )}
-              <Button variant="ghost" className="gap-2 rounded-full font-medium">
-                <User className="h-4 w-4" />
-                My Account
-              </Button>
+              <Link href="/profile">
+                <Button variant="ghost" className="gap-2 rounded-full font-medium">
+                  <User className="h-4 w-4" />
+                  My Account
+                </Button>
+              </Link>
               <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout" className="hover:bg-red-50 hover:text-red-600 rounded-full">
                 <LogOut className="h-4 w-4" />
               </Button>

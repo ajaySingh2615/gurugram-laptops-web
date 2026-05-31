@@ -31,6 +31,7 @@ interface OrderDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onStatusUpdated?: () => void;
+  readOnly?: boolean;
 }
 
 const statusColors: Record<string, string> = {
@@ -54,6 +55,7 @@ export function OrderDetailsDialog({
   open,
   onOpenChange,
   onStatusUpdated,
+  readOnly = false,
 }: OrderDetailsDialogProps) {
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -142,28 +144,30 @@ export function OrderDetailsDialog({
               </div>
             </div>
 
-            <div>
-              <h3 className="font-semibold mb-3">Update Status</h3>
-              <div className="flex gap-2">
-                <Select
-                  disabled={isUpdating}
-                  value={order.status}
-                  onValueChange={handleStatusChange}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PENDING">Pending</SelectItem>
-                    <SelectItem value="PROCESSING">Processing</SelectItem>
-                    <SelectItem value="SHIPPED">Shipped</SelectItem>
-                    <SelectItem value="DELIVERED">Delivered</SelectItem>
-                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-                {isUpdating && <Loader2 className="w-8 h-8 p-1.5 animate-spin text-muted-foreground" />}
+            {!readOnly && (
+              <div>
+                <h3 className="font-semibold mb-3">Update Status</h3>
+                <div className="flex gap-2">
+                  <Select
+                    disabled={isUpdating}
+                    value={order.status}
+                    onValueChange={handleStatusChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="PROCESSING">Processing</SelectItem>
+                      <SelectItem value="SHIPPED">Shipped</SelectItem>
+                      <SelectItem value="DELIVERED">Delivered</SelectItem>
+                      <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {isUpdating && <Loader2 className="w-8 h-8 p-1.5 animate-spin text-muted-foreground" />}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Right Column: Order Items */}
