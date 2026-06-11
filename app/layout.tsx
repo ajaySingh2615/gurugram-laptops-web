@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/components/AuthProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Footer } from "@/components/home/footer";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -38,6 +39,7 @@ export default function RootLayout({
             <main className="container mx-auto p-8 flex-1">
               {children}
             </main>
+            <Footer />
             <Toaster />
           </TooltipProvider>
         </AuthProvider>
@@ -45,3 +47,4 @@ export default function RootLayout({
     </html>
   );
 }
+

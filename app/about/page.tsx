@@ -32,13 +32,16 @@ export default function About() {
         <div className="relative max-w-5xl mx-auto px-6 py-20 md:py-28 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/10 backdrop-blur mb-6">
             <Building2 className="h-4 w-4 text-blue-400" />
-            <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">About Us</span>
+            <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">
+              About Us
+            </span>
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
             Gurugram IT Networks
           </h1>
           <p className="mt-4 text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Your trusted technology partner for reliable IT solutions, security systems, and business infrastructure services.
+            Your trusted technology partner for reliable IT solutions, security
+            systems, and business infrastructure services.
           </p>
         </div>
       </section>
@@ -51,16 +54,38 @@ export default function About() {
               Our Story
             </h2>
             <p className="text-gray-600 leading-relaxed">
-              Founded with a vision to simplify technology for businesses and individuals, Gurugram IT Networks has been serving customers for over <strong className="text-gray-900">9 years</strong>. Throughout our journey, we have built a strong reputation for delivering quality products, professional support, and dependable service across a wide range of IT and security solutions.
+              Founded with a vision to simplify technology for businesses and
+              individuals, Gurugram IT Networks has been serving customers for
+              over <strong className="text-gray-900">9 years</strong>.
+              Throughout our journey, we have built a strong reputation for
+              delivering quality products, professional support, and dependable
+              service across a wide range of IT and security solutions.
             </p>
             <p className="text-gray-600 leading-relaxed">
-              Our expertise includes CCTV surveillance systems, biometric attendance machines, networking solutions, EPABX systems, computer hardware, laptops, desktops, accessories, and Annual Maintenance Contract (AMC) services. Over the years, we have successfully supported businesses, offices, educational institutions, retail outlets, and residential customers with customized technology solutions.
+              Our expertise includes CCTV surveillance systems, biometric
+              attendance machines, networking solutions, EPABX systems, computer
+              hardware, laptops, desktops, accessories, and Annual Maintenance
+              Contract (AMC) services. Over the years, we have successfully
+              supported businesses, offices, educational institutions, retail
+              outlets, and residential customers with customized technology
+              solutions.
             </p>
             <p className="text-gray-600 leading-relaxed">
-              As technology continues to evolve, so do we. To better serve our customers across India, we are now expanding into the e-commerce space through <strong className="text-gray-900">GurugramITNetworks.com</strong>. Our goal is to make high-quality IT products and solutions easily accessible online while maintaining the same trust, support, and customer-first approach that has defined our business for nearly a decade.
+              As technology continues to evolve, so do we. To better serve our
+              customers across India, we are now expanding into the e-commerce
+              space through{" "}
+              <strong className="text-gray-900">GurugramITNetworks.com</strong>.
+              Our goal is to make high-quality IT products and solutions easily
+              accessible online while maintaining the same trust, support, and
+              customer-first approach that has defined our business for nearly a
+              decade.
             </p>
             <p className="text-gray-600 leading-relaxed">
-              At Gurugram IT Networks, we believe that technology should empower growth, improve security, and simplify operations. Whether you are looking for a single product or a complete IT infrastructure solution, our team is committed to helping you find the right solution at the right price.
+              At Gurugram IT Networks, we believe that technology should empower
+              growth, improve security, and simplify operations. Whether you are
+              looking for a single product or a complete IT infrastructure
+              solution, our team is committed to helping you find the right
+              solution at the right price.
             </p>
           </div>
 
@@ -68,11 +93,15 @@ export default function About() {
           <div className="lg:col-span-2 space-y-4">
             <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
               <p className="text-4xl font-extrabold text-gray-900">9+</p>
-              <p className="text-sm text-gray-500 mt-1">Years of Industry Experience</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Years of Industry Experience
+              </p>
             </div>
             <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
               <p className="text-4xl font-extrabold text-gray-900">1000+</p>
-              <p className="text-sm text-gray-500 mt-1">Happy Customers Served</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Happy Customers Served
+              </p>
             </div>
             <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
               <p className="text-4xl font-extrabold text-gray-900">Pan-India</p>
@@ -94,9 +123,13 @@ export default function About() {
             <div className="flex items-center justify-center h-14 w-14 rounded-xl bg-gradient-to-br from-gray-900 to-gray-700 text-white shadow-lg mb-6">
               <Target className="h-6 w-6" />
             </div>
-            <h3 className="text-xl font-extrabold text-gray-900 mb-3">Our Mission</h3>
+            <h3 className="text-xl font-extrabold text-gray-900 mb-3">
+              Our Mission
+            </h3>
             <p className="text-gray-600 leading-relaxed">
-              To provide affordable, reliable, and innovative technology solutions that help businesses and individuals stay connected, secure, and productive.
+              To provide affordable, reliable, and innovative technology
+              solutions that help businesses and individuals stay connected,
+              secure, and productive.
             </p>
           </div>
 
@@ -104,9 +137,13 @@ export default function About() {
             <div className="flex items-center justify-center h-14 w-14 rounded-xl bg-gradient-to-br from-gray-900 to-gray-700 text-white shadow-lg mb-6">
               <Eye className="h-6 w-6" />
             </div>
-            <h3 className="text-xl font-extrabold text-gray-900 mb-3">Our Vision</h3>
+            <h3 className="text-xl font-extrabold text-gray-900 mb-3">
+              Our Vision
+            </h3>
             <p className="text-gray-600 leading-relaxed">
-              To become one of India&apos;s most trusted IT and security solution providers by combining expert service, quality products, and a seamless online shopping experience.
+              To become one of India&apos;s most trusted IT and security
+              solution providers by combining expert service, quality products,
+              and a seamless online shopping experience.
             </p>
           </div>
         </div>
@@ -137,24 +174,11 @@ export default function About() {
               <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-gray-100 text-gray-700 flex-shrink-0">
                 <item.icon className="h-5 w-5" />
               </div>
-              <span className="text-sm font-semibold text-gray-800">{item.title}</span>
+              <span className="text-sm font-semibold text-gray-800">
+                {item.title}
+              </span>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* CTA Banner */}
-      <section className="bg-gray-950 text-white">
-        <div className="max-w-5xl mx-auto px-6 py-16 md:py-20 text-center">
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-4">
-            Gurugram IT Networks
-          </h2>
-          <p className="text-lg text-gray-400 mb-2">Connecting Technology with Trust.</p>
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 mt-6 text-sm text-gray-400">
-            <span>+91 87500 77878</span>
-            <span>info@gurugramitnetworks.com</span>
-            <span>Shop No. 109, Aapka Bazar, Near Bus Stand, Gurugram</span>
-          </div>
         </div>
       </section>
     </div>

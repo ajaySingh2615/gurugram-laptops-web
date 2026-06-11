@@ -4,7 +4,7 @@ import { FlashSale } from "@/components/home/flash-sale";
 import { ShopByBrand } from "@/components/home/shop-by-brand";
 import { BudgetCategories } from "@/components/home/budget-categories";
 import { TestimonialsFaq } from "@/components/home/testimonials-faq";
-import { Footer } from "@/components/home/footer";
+
 
 export default function Home() {
   return (
@@ -43,8 +43,6 @@ export default function Home() {
         <TestimonialsFaq />
       </div>
 
-      {/* Footer - Full width */}
-      <Footer />
     </div>
   );
 }
