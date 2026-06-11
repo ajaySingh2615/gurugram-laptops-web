@@ -3,7 +3,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star, ArrowRight } from "lucide-react";
+import { Star, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Card, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const formatInr = (n: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
@@ -80,47 +82,84 @@ export function BudgetCategories() {
 
       {/* Product Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-        {products.map((product) => (
-          <Link
-            key={product.id}
-            href="/shop"
-            className="group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-          >
-            {/* Image */}
-            <div className="relative h-[140px] md:h-[170px] bg-gray-50 overflow-hidden">
-              <Image
-                src={product.image}
-                alt={product.title}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                sizes="(max-width: 768px) 50vw, 25vw"
-              />
-              {/* Save Badge */}
-              <div className="absolute top-2 right-2">
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-bold shadow-md">
-                  Save {formatInr(product.originalPrice - product.salePrice)}
-                </span>
-              </div>
-            </div>
+        {products.map((product) => {
+          const savings = product.originalPrice - product.salePrice;
+          const discountPercent = Math.round((savings / product.originalPrice) * 100);
 
-            {/* Content */}
-            <div className="p-3 md:p-4">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">{product.brand}</p>
-              <h3 className="font-bold text-gray-900 text-sm mt-0.5 line-clamp-1">{product.title}</h3>
-              <p className="text-xs text-gray-400 mt-0.5">{product.specs}</p>
+          return (
+            <Card
+              key={product.id}
+              className="overflow-hidden flex flex-col hover:shadow-lg transition-all duration-300 group border-muted"
+            >
+              <Link href="/shop" className="block aspect-[4/3] relative bg-gradient-to-b from-muted/50 to-muted p-4 cursor-pointer">
+                <Image
+                  src={product.image}
+                  alt={product.title}
+                  fill
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                  className="object-contain p-4 mix-blend-multiply dark:mix-blend-normal group-hover:scale-105 transition-transform duration-500"
+                />
 
-              <div className="flex items-center gap-1 mt-2">
-                <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
-                <span className="text-xs font-semibold text-gray-500">{product.rating}</span>
-              </div>
+                {/* Top Left: Condition Badge */}
+                <Badge
+                  className="absolute top-2 left-2 shadow-sm bg-background/90 backdrop-blur-md text-foreground border-border text-[10px] px-1.5 py-0"
+                  variant="outline"
+                >
+                  <CheckCircle2 className="w-3 h-3 mr-1 text-green-500" />
+                  Refurbished
+                </Badge>
 
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-base md:text-lg font-extrabold text-gray-900">{formatInr(product.salePrice)}</span>
-                <span className="text-xs text-gray-400 line-through">{formatInr(product.originalPrice)}</span>
-              </div>
-            </div>
-          </Link>
-        ))}
+                {/* Top Right: Rating */}
+                <Badge className="absolute top-2 right-2 shadow-sm bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100 text-[10px] px-1.5 py-0">
+                  <Star className="w-3 h-3 mr-1 fill-amber-500 text-amber-500" />
+                  {product.rating}
+                </Badge>
+
+                {/* Bottom Left: Discount Tag */}
+                <div className="absolute bottom-2 left-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">
+                  {discountPercent}% OFF
+                </div>
+              </Link>
+
+              <CardHeader className="p-3 flex-1">
+                <div className="mb-1">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {product.brand}
+                  </span>
+                  <Link href="/shop">
+                    <CardTitle className="line-clamp-2 text-sm mt-0.5 leading-tight group-hover:text-primary transition-colors cursor-pointer hover:underline">
+                      {product.title}
+                    </CardTitle>
+                  </Link>
+                </div>
+
+                <CardDescription className="flex items-center gap-1 flex-wrap text-[10px] mt-1">
+                  <span className="bg-muted/50 border px-1.5 py-0.5 rounded-sm">
+                    {product.specs}
+                  </span>
+                </CardDescription>
+              </CardHeader>
+
+              <CardFooter className="p-3 pt-0 flex flex-col gap-2">
+                <div className="flex items-end justify-between w-full">
+                  <div className="flex flex-col">
+                    <span className="text-lg font-bold leading-none">
+                      {formatInr(product.salePrice)}
+                    </span>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[10px] text-muted-foreground line-through">
+                        {formatInr(product.originalPrice)}
+                      </span>
+                      <span className="text-[10px] text-green-600 font-medium">
+                        Save {formatInr(savings)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
 
       {/* View All */}
