@@ -8,22 +8,22 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div>
-            <h3 className="text-xl font-extrabold text-white tracking-tight mb-4">TechReborn</h3>
+            <h3 className="text-xl font-extrabold text-white tracking-tight mb-4">Gurugram IT Networks</h3>
             <p className="text-sm text-gray-400 leading-relaxed mb-5">
-              India&apos;s most trusted destination for premium refurbished laptops. Save big, go green, get quality.
+              Your trusted technology partner for reliable IT solutions, security systems, and business infrastructure services. Serving customers for 9+ years.
             </p>
             <div className="space-y-2 text-sm text-gray-400">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 flex-shrink-0 text-gray-500" />
-                <span>Noida, Uttar Pradesh, India</span>
+              <div className="flex items-start gap-2">
+                <MapPin className="h-4 w-4 flex-shrink-0 text-gray-500 mt-0.5" />
+                <span>Shop No. 109, Aapka Bazar, Near Bus Stand, Gurugram</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 flex-shrink-0 text-gray-500" />
-                <span>+91 98765 43210</span>
+                <a href="tel:+918750077878" className="hover:text-white transition-colors">+91 87500 77878</a>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 flex-shrink-0 text-gray-500" />
-                <span>support@techreborn.com</span>
+                <a href="mailto:info@gurugramitnetworks.com" className="hover:text-white transition-colors">info@gurugramitnetworks.com</a>
               </div>
             </div>
           </div>
@@ -91,7 +91,7 @@ export function Footer() {
         {/* Divider & Copyright */}
         <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-500">
-            &copy; {new Date().getFullYear()} TechReborn. All rights reserved.
+            &copy; {new Date().getFullYear()} Gurugram IT Networks. All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-xs text-gray-500">
             <span className="hover:text-white transition-colors cursor-pointer">Privacy</span>
