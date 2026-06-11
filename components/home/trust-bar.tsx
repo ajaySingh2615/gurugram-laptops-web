@@ -1,43 +1,43 @@
 "use client";
 
 import {
-  Truck,
-  ShieldCheck,
-  BadgePercent,
-  Headset,
-  Award,
-} from "lucide-react";
+  PiRocketLaunchDuotone,
+  PiShieldCheckDuotone,
+  PiTagDuotone,
+  PiHeadsetDuotone,
+  PiCertificateDuotone,
+} from "react-icons/pi";
 
 const features = [
   {
-    icon: Truck,
+    icon: PiRocketLaunchDuotone,
     title: "Fast Delivery",
     desc: "Free shipping on orders above ₹15,000",
-    color: "from-blue-500 to-cyan-400",
+    color: "from-gray-900 to-gray-700",
   },
   {
-    icon: ShieldCheck,
+    icon: PiShieldCheckDuotone,
     title: "Secure Payment",
     desc: "100% protected transactions",
-    color: "from-emerald-500 to-green-400",
+    color: "from-gray-900 to-gray-700",
   },
   {
-    icon: BadgePercent,
+    icon: PiTagDuotone,
     title: "Great Discounts",
     desc: "Up to 60% off on all laptops",
-    color: "from-orange-500 to-amber-400",
+    color: "from-gray-900 to-gray-700",
   },
   {
-    icon: Headset,
+    icon: PiHeadsetDuotone,
     title: "24/7 Help Center",
     desc: "Dedicated support, anytime",
-    color: "from-purple-500 to-violet-400",
+    color: "from-gray-900 to-gray-700",
   },
   {
-    icon: Award,
+    icon: PiCertificateDuotone,
     title: "ISO Certified",
     desc: "Quality assured refurbishment",
-    color: "from-rose-500 to-pink-400",
+    color: "from-gray-900 to-gray-700",
   },
 ];
 

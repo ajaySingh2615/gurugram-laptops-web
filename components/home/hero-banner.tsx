@@ -2,17 +2,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const banners = [
-  { src: "/images/banners/banner-1.jpg", alt: "Creativity. Power Amplified." },
+  { src: "/images/banners/banner-1.png", alt: "Creativity. Power Amplified." },
   {
-    src: "/images/banners/banner-2.jpg",
+    src: "/images/banners/banner-2.png",
     alt: "Performance That Keeps Up With You",
   },
   // { src: "/images/banners/banner-3.jpg", alt: "TechReborn Banner 3" },
-  { src: "/images/banners/banner-4.jpg", alt: "TechReborn Banner 4" },
 ];
 
 export function HeroBanner() {
@@ -47,8 +45,8 @@ export function HeroBanner() {
       className="relative w-full overflow-hidden rounded-2xl"
       id="hero-banner"
     >
-      {/* Aspect ratio container: 1344 / 768 = 1.75:1 */}
-      <div className="relative w-full" style={{ paddingBottom: "57.14%" }}>
+      {/* Aspect ratio container: 1774 / 887 = 2:1 */}
+      <div className="relative w-full" style={{ paddingBottom: "50%" }}>
         {banners.map((banner, i) => (
           <div
             key={i}
@@ -101,7 +99,6 @@ export function HeroBanner() {
           />
         ))}
       </div>
-
     </section>
   );
 }
