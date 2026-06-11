@@ -3,58 +3,65 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Zap, ArrowRight, Star } from "lucide-react";
+import { Zap, ArrowRight, Star, CheckCircle2 } from "lucide-react";
+import { Card, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const flashProducts = [
   {
     id: "flash-1",
     title: "HP Pavilion 15",
+    brand: "HP",
     image: "/images/banners/banner-1.jpg",
     originalPrice: 58000,
     salePrice: 32999,
     discount: 43,
     rating: 4.5,
-    specs: "i5 12th Gen / 8GB / 512GB SSD",
+    specs: "i5 12th Gen / 8GB / 512GB",
   },
   {
     id: "flash-2",
     title: "Dell Inspiron 14",
+    brand: "DELL",
     image: "/images/banners/banner-2.jpg",
     originalPrice: 52000,
     salePrice: 28999,
     discount: 44,
     rating: 4.3,
-    specs: "i5 11th Gen / 8GB / 256GB SSD",
+    specs: "i5 11th Gen / 8GB / 256GB",
   },
   {
     id: "flash-3",
     title: "Lenovo IdeaPad 3",
+    brand: "LENOVO",
     image: "/images/banners/banner-3.jpg",
     originalPrice: 45000,
     salePrice: 24999,
     discount: 44,
     rating: 4.4,
-    specs: "Ryzen 5 / 8GB / 512GB SSD",
+    specs: "Ryzen 5 / 8GB / 512GB",
   },
   {
     id: "flash-4",
     title: "ASUS VivoBook 15",
+    brand: "ASUS",
     image: "/images/banners/banner-4.jpg",
     originalPrice: 48000,
     salePrice: 26999,
     discount: 44,
     rating: 4.2,
-    specs: "i5 11th Gen / 8GB / 512GB SSD",
+    specs: "i5 11th Gen / 8GB / 512GB",
   },
   {
     id: "flash-5",
     title: "Acer Aspire 5",
+    brand: "ACER",
     image: "/images/banners/banner-1.jpg",
     originalPrice: 42000,
     salePrice: 22999,
     discount: 45,
     rating: 4.1,
-    specs: "i3 12th Gen / 8GB / 256GB SSD",
+    specs: "i3 12th Gen / 8GB / 256GB",
   },
 ];
 
@@ -133,52 +140,85 @@ export function FlashSale() {
         </div>
       </div>
 
-      {/* Scrollable Cards */}
+      {/* Scrollable Cards styled like the shop page, but slightly smaller width */}
       <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4">
-        {flashProducts.map((product) => (
-          <Link
-            href="/shop"
-            key={product.id}
-            className="group flex-shrink-0 w-[260px] md:w-[280px] snap-start"
-          >
-            <div className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              {/* Discount Badge */}
-              <div className="absolute top-3 left-3 z-10">
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500 text-white text-xs font-bold shadow-lg">
-                  <Zap className="h-3 w-3 fill-white" />
-                  {product.discount}% OFF
-                </span>
-              </div>
-
-              {/* Image */}
-              <div className="relative h-[160px] bg-gray-50 overflow-hidden">
+        {flashProducts.map((product) => {
+          const savings = product.originalPrice - product.salePrice;
+          
+          return (
+            <Card
+              key={product.id}
+              className="flex-shrink-0 w-[240px] md:w-[260px] snap-start overflow-hidden flex flex-col hover:shadow-lg transition-all duration-300 group border-muted"
+            >
+              <Link href="/shop" className="block aspect-[4/3] relative bg-gradient-to-b from-muted/50 to-muted p-4 cursor-pointer">
                 <Image
                   src={product.image}
                   alt={product.title}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  sizes="280px"
+                  sizes="260px"
+                  className="object-contain p-4 mix-blend-multiply dark:mix-blend-normal group-hover:scale-105 transition-transform duration-500"
                 />
-              </div>
 
-              {/* Info */}
-              <div className="p-4">
-                <h3 className="font-bold text-gray-900 text-sm line-clamp-1">{product.title}</h3>
-                <p className="text-xs text-gray-400 mt-0.5">{product.specs}</p>
+                {/* Top Left: Condition Badge */}
+                <Badge
+                  className="absolute top-2 left-2 shadow-sm bg-background/90 backdrop-blur-md text-foreground border-border text-[10px] px-1.5 py-0"
+                  variant="outline"
+                >
+                  <CheckCircle2 className="w-3 h-3 mr-1 text-green-500" />
+                  Refurbished
+                </Badge>
 
-                <div className="flex items-center gap-1 mt-2">
-                  <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
-                  <span className="text-xs font-semibold text-gray-600">{product.rating}</span>
+                {/* Top Right: Rating */}
+                <Badge className="absolute top-2 right-2 shadow-sm bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100 text-[10px] px-1.5 py-0">
+                  <Star className="w-3 h-3 mr-1 fill-amber-500 text-amber-500" />
+                  {product.rating}
+                </Badge>
+
+                {/* Bottom Left: Discount Tag */}
+                <div className="absolute bottom-2 left-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">
+                  {product.discount}% OFF
+                </div>
+              </Link>
+
+              <CardHeader className="p-3 flex-1">
+                <div className="mb-1">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {product.brand}
+                  </span>
+                  <Link href="/shop">
+                    <CardTitle className="line-clamp-2 text-sm mt-0.5 leading-tight group-hover:text-primary transition-colors cursor-pointer hover:underline">
+                      {product.title}
+                    </CardTitle>
+                  </Link>
                 </div>
 
-                <div className="flex items-baseline gap-2 mt-3">
-                  <span className="text-lg font-extrabold text-gray-900">{formatInr(product.salePrice)}</span>
-                  <span className="text-sm text-gray-400 line-through">{formatInr(product.originalPrice)}</span>
+                <CardDescription className="flex items-center gap-1 flex-wrap text-[10px] mt-1">
+                  <span className="bg-muted/50 border px-1.5 py-0.5 rounded-sm">
+                    {product.specs}
+                  </span>
+                </CardDescription>
+              </CardHeader>
+
+              <CardFooter className="p-3 pt-0 flex flex-col gap-2">
+                <div className="flex items-end justify-between w-full">
+                  <div className="flex flex-col">
+                    <span className="text-lg font-bold leading-none">
+                      {formatInr(product.salePrice)}
+                    </span>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[10px] text-muted-foreground line-through">
+                        {formatInr(product.originalPrice)}
+                      </span>
+                      <span className="text-[10px] text-green-600 font-medium">
+                        Save {formatInr(savings)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </Link>
-        ))}
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
 
       {/* View All */}
