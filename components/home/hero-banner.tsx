@@ -102,14 +102,6 @@ export function HeroBanner() {
         ))}
       </div>
 
-      {/* Shop Now CTA */}
-      <Link
-        href="/shop"
-        className="absolute bottom-12 md:bottom-16 left-6 md:left-12 z-10 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm md:text-base"
-      >
-        Shop Now
-        <ChevronRight className="h-4 w-4" />
-      </Link>
     </section>
   );
 }
