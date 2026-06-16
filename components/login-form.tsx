@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   Field,
   FieldDescription,
@@ -110,7 +111,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                     Forgot your password?
                   </Link>
                 </div>
-                <Input id="password" type="password" {...register("password")} />
+                <PasswordInput id="password" {...register("password")} />
                 {errors.password && <FieldDescription className="text-red-500">{errors.password.message}</FieldDescription>}
               </Field>
 

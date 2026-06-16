@@ -8,15 +8,22 @@ import { AuthService } from "@/services/auth.service";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
+import { PasswordStrength } from "@/components/password-strength";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Loader2, KeyRound } from "lucide-react";
 import Link from "next/link";
 import { isAxiosError } from "axios";
 import { useSearchParams, useRouter } from "next/navigation";
+import { isPasswordStrongEnough } from "@/lib/password";
 
 const resetSchema = z.object({
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .refine(isPasswordStrongEnough, {
+      message: "Password is too weak. Include uppercase, lowercase, numbers, or special characters.",
+    }),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
@@ -32,10 +39,12 @@ function ResetPasswordContent() {
   const token = searchParams.get("token");
   const router = useRouter();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ResetFormValues>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<ResetFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(resetSchema as any),
   });
+
+  const passwordValue = watch("password", "");
 
   if (!token) {
     return (
@@ -96,13 +105,14 @@ function ResetPasswordContent() {
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="password">New Password</FieldLabel>
-                <Input id="password" type="password" {...register("password")} />
+                <PasswordInput id="password" {...register("password")} />
                 {errors.password && <FieldDescription className="text-red-500">{errors.password.message}</FieldDescription>}
+                <PasswordStrength password={passwordValue} />
               </Field>
 
               <Field>
                 <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-                <Input id="confirmPassword" type="password" {...register("confirmPassword")} />
+                <PasswordInput id="confirmPassword" {...register("confirmPassword")} />
                 {errors.confirmPassword && <FieldDescription className="text-red-500">{errors.confirmPassword.message}</FieldDescription>}
               </Field>
 

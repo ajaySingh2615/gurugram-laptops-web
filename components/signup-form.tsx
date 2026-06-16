@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
+import { PasswordStrength } from "@/components/password-strength";
 import {
   Field,
   FieldDescription,
@@ -18,12 +20,18 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { AuthService } from "@/services/auth.service";
+import { isPasswordStrongEnough } from "@/lib/password";
 
 // Define our validation schema (Mirroring the backend)
 const signupSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .refine(isPasswordStrongEnough, {
+      message: "Password is too weak. Include uppercase, lowercase, numbers, or special characters.",
+    }),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
@@ -39,11 +47,14 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"div">)
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<SignupFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(signupSchema as any),
   });
+
+  const passwordValue = watch("password", "");
 
   const onSubmit = async (data: SignupFormValues) => {
     try {
@@ -117,7 +128,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"div">)
                   {/* PASSWORD */}
                   <Field>
                     <FieldLabel htmlFor="password">Password</FieldLabel>
-                    <Input id="password" type="password" {...register("password")} />
+                    <PasswordInput id="password" {...register("password")} />
                     {errors.password && <FieldDescription className="text-red-500 text-xs">{errors.password.message}</FieldDescription>}
                   </Field>
 
@@ -126,10 +137,13 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"div">)
                     <FieldLabel htmlFor="confirmPassword">
                       Confirm Password
                     </FieldLabel>
-                    <Input id="confirmPassword" type="password" {...register("confirmPassword")} />
+                    <PasswordInput id="confirmPassword" {...register("confirmPassword")} />
                     {errors.confirmPassword && <FieldDescription className="text-red-500 text-xs">{errors.confirmPassword.message}</FieldDescription>}
                   </Field>
                 </Field>
+
+                {/* Password Strength Meter */}
+                <PasswordStrength password={passwordValue} />
               </Field>
 
               <Field>
