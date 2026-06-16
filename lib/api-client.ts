@@ -24,8 +24,12 @@ apiClient.interceptors.response.use(
 
     // If the error is 401 (Unauthorized) and we haven't already retried this request...
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Don't intercept calls to the refresh route itself to prevent infinite loops
-      if (originalRequest.url === '/auth/refresh-token') {
+      // Don't intercept calls to the refresh route itself, or to login/register routes
+      if (
+        originalRequest.url === '/auth/refresh' ||
+        originalRequest.url === '/auth/login' ||
+        originalRequest.url === '/auth/register'
+      ) {
         return Promise.reject(error);
       }
 
@@ -33,7 +37,7 @@ apiClient.interceptors.response.use(
 
       try {
         // Attempt to get a new token!
-        await apiClient.post('/auth/refresh-token');
+        await apiClient.post('/auth/refresh');
         
         // If successful, the new secure cookie is set automatically.
         // Retry the original request!

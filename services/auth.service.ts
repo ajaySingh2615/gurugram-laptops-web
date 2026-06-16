@@ -26,18 +26,52 @@ export interface AuthResponse {
 
 export class AuthService {
   public static async register(data: RegisterDto): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/auth/register', data);
-    return response.data;
+    const payload = {
+      name: data.fullName,
+      email: data.email,
+      password: data.password,
+    };
+    const response = await apiClient.post<any>('/auth/register', payload);
+    const user = response.data.data.user;
+    return {
+      success: response.data.success,
+      message: response.data.message,
+      data: {
+        user: {
+          id: user.id,
+          fullName: user.name,
+          email: user.email,
+        }
+      }
+    };
   }
 
   public static async login(data: LoginDto): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/auth/login', data);
-    return response.data;
+    const response = await apiClient.post<any>('/auth/login', data);
+    const user = response.data.data.user;
+    return {
+      success: response.data.success,
+      message: response.data.message,
+      data: {
+        user: {
+          id: user.id,
+          fullName: user.name,
+          email: user.email,
+        }
+      }
+    };
   }
 
   public static async getMe(): Promise<{ userId: string; fullName: string; email: string; role: 'USER' | 'ADMIN'; status: 'ACTIVE' | 'BANNED' }> {
     const response = await apiClient.get('/auth/me');
-    return response.data;
+    const user = response.data.data.user;
+    return {
+      userId: user.id,
+      fullName: user.name || '',
+      email: user.email || '',
+      role: user.role as 'USER' | 'ADMIN',
+      status: user.status as 'ACTIVE' | 'BANNED',
+    };
   }
 
   public static async logout(): Promise<void> {
@@ -45,7 +79,7 @@ export class AuthService {
   }
 
   public static async refreshToken(): Promise<void> {
-    await apiClient.post('/auth/refresh-token');
+    await apiClient.post('/auth/refresh');
   }
 
   public static async verifyEmail(token: string): Promise<void> {
