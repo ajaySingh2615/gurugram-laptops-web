@@ -24,6 +24,25 @@ export interface AuthResponse {
   };
 }
 
+// Matches the exact JSON shape the backend sends on register/login
+interface BackendAuthResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    user: {
+      id: string;
+      name: string | null;
+      email: string;
+      role: string;
+      status: string;
+    };
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: string;
+  };
+}
+
 export class AuthService {
   public static async register(data: RegisterDto): Promise<AuthResponse> {
     const payload = {
@@ -31,7 +50,7 @@ export class AuthService {
       email: data.email,
       password: data.password,
     };
-    const response = await apiClient.post<any>('/auth/register', payload);
+    const response = await apiClient.post<BackendAuthResponse>('/auth/register', payload);
     const user = response.data.data.user;
     return {
       success: response.data.success,
@@ -47,7 +66,7 @@ export class AuthService {
   }
 
   public static async login(data: LoginDto): Promise<AuthResponse> {
-    const response = await apiClient.post<any>('/auth/login', data);
+    const response = await apiClient.post<BackendAuthResponse>('/auth/login', data);
     const user = response.data.data.user;
     return {
       success: response.data.success,
